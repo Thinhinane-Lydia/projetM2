@@ -15,28 +15,88 @@ const Singup = () => {
   const [visible, setVisible] = useState(false);
   const [avatar, setAvatar] = useState(null);
 
+  const [preview, setPreview] = useState(null);
+
   const handleFileInputChange = (e) => {
-    const file=e.target.files[0];
-    setAvatar(file);  
-  };
+    const file = e.target.files[0];
 
-  const handleSubmit = async (e) => {
-    const config = { headers: { "Content-Type": "multipart/form-data" } };
+    if (!file) {
+        console.log("Aucun fichier sélectionné !");
+        return; // Stoppe la fonction si aucun fichier n'est sélectionné
+    }
 
-    const newForm = new FormData();
-    newForm.append("file", avatar);
-    newForm.append("name", name);
-    newForm.append("email", email);
-    newForm.append("password", password);
-
-    axios.post(`${server}/user/create-user`, newForm, config)
-        .then((res) => {
-            console.log(res);
-        })
-        .catch((err) => {
-            console.log(err);
-        });
+    setAvatar(file);
+    setPreview(URL.createObjectURL(file)); // Générer l'aperçu de l'image
 };
+
+
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     const config = { headers: { "Content-Type": "multipart/form-data" } };
+
+//     const newForm = new FormData();
+//     newForm.append("file", avatar);
+//     newForm.append("name", name);
+//     newForm.append("email", email);
+//     newForm.append("password", password);
+
+//     axios.post(`${server}/user/create-user`, newForm, config)
+//         .then((res) => {
+//             console.log(res);
+//         })
+//         .catch((err) => {
+//             console.log(err);
+//         });
+// };
+
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
+//   const config = { headers: { "Content-Type": "multipart/form-data" } };
+
+//   const newForm = new FormData();
+//   newForm.append("file", avatar);
+//   newForm.append("name", name);
+//   newForm.append("email", email);
+//   newForm.append("password", password);
+
+//   axios.post(`${server}/user/create-user`, newForm, config)
+//   .then((res) => {
+//       console.log("User created:", res.data);
+//   })
+//   .catch((err) => {
+//       console.log("Error:", err.response); // Affiche la réponse complète
+//   });
+
+// };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!avatar) {
+      console.log("❌ Aucun fichier sélectionné !");
+      return alert("Veuillez sélectionner une image !");
+  }
+
+  const newForm = new FormData();
+  newForm.append("avatar", avatar);
+  newForm.append("name", name);
+  newForm.append("email", email);
+  newForm.append("password", password);
+
+  console.log("✅ FormData envoyé :", newForm.get("avatar"));
+
+  try {
+      const res = await axios.post(`${server}/user/create-user`, newForm, {
+          headers: { "Content-Type": "multipart/form-data" },
+      });
+      console.log("✅ Utilisateur créé :", res.data);
+  } catch (err) {
+      console.error("❌ Erreur lors de l'inscription :", err.response);
+  }
+};
+
+
+
 
 
    // axios
@@ -143,15 +203,12 @@ const Singup = () => {
               ></label>
               <div className="mt-2 flex items-center">
                 <span className="inline-block h-8 w-8 rounded-full overflow-hidden">
-                  {avatar ? (
-                    <img
-                      src={avatar}
-                      alt="avatar"
-                      className="h-full w-full object-cover rounded-full"
-                    />
+                {preview ? (
+                   <img src={preview} alt="avatar" className="h-full w-full object-cover rounded-full" />
                   ) : (
-                    <RxAvatar className="h-8 w-8" />
+                             <RxAvatar className="h-8 w-8" />
                   )}
+
                 </span>
                 <label
                   htmlFor="file-input"

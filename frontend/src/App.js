@@ -23,17 +23,19 @@ const App = () => {
         <Route path="/activation-success" element={<ActivationPage />} />
       </Routes>
       <ToastContainer
-        position="bottom-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
+  position="bottom-center"
+  autoClose={5000}
+  hideProgressBar={true}
+  newestOnTop={false}
+  closeOnClick
+  rtl={false}
+  pauseOnFocusLoss
+  draggable
+  pauseOnHover
+  theme="light"
+/>
+
+
     </BrowserRouter>
   );
 };

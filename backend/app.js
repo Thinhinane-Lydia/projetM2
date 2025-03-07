@@ -1,44 +1,42 @@
 const express = require("express");
 const ErrorHandler = require("./utils/ErrorHandler");
-const app = express();
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const cors=require("cors");
+const cors = require("cors");
+require("dotenv").config({ path: "./backend/config/.env" }); // ✅ Charger dotenv dès le début
 
-app.use(express.json()); 
-app.use(cors());
+const app = express();
+
+// ✅ Activer les middlewares
+app.use(express.json());
 app.use(cookieParser());
-// app.use("/",express.static("uploads"));
-app.use("/uploads", express.static("uploads"));
-
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
-// config
-if (process.env.NODE_ENV !== "PRODUCTION") {
-  require("dotenv").config({ path: "./backend/config/.env" });
-}
+// ✅ Configuration CORS (ajout de localhost)
+app.use(cors({
+  origin: 
+    "http://localhost:3000", // 🔹 Développement local
+     
+  
+  credentials: true
+}));
 
-// import routes
+// ✅ Servir les fichiers statiques
+app.use("/uploads", express.static("uploads"));
+
+// ✅ Importation des routes
 const user = require("./controller/user");
-
 app.use("/api/v2/user", user);
 
-// it's for ErrorHandling
-// Middleware de gestion des erreurs
+// ✅ Middleware de gestion des erreurs
 app.use((err, req, res, next) => {
-  if (err instanceof ErrorHandler) {
-    res.status(err.statusCode).json({
-      success: false,
-      message: err.message
-    });
-  } else {
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error"
-    });
-  }
+  console.error("❌ Erreur détectée :", err.message);
+  console.error("🔍 Détails :", err);
+
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || "Erreur serveur. Veuillez réessayer plus tard."
+  });
 });
-
-
 
 module.exports = app;

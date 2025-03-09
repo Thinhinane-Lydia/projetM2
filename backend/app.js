@@ -1,5 +1,5 @@
 const express = require("express");
-const ErrorHandler = require("./utils/ErrorHandler");
+const ErrorHandler = require("./utils/ErrorHandler.js");
 const app = express();
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
@@ -17,14 +17,22 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
 }
 
 // Import routes
-const user = require("./controller/user");
-const product=require("./controller/product");
+const categoryRoutes = require("./routes/category");
+const subCategoryRoutes = require("./routes/subcategory");
 const productRoutes = require("./routes/product");
+const sizeRoutes = require("./routes/size");
+const user=require("./controller/user");
+
 
 app.use("/api/v2/user", user);
-app.use("/api/v2/products", productRoutes); // ✅ Ajout des routes produits
+app.use("/api/v2/categories", categoryRoutes);//  Ajout des routes cat
+app.use("/api/v2/subcategories", subCategoryRoutes);//  Ajout des routes subcat
+app.use("/api/v2/products", productRoutes)//  Ajout des routes produits
+app.use("/api/v2/sizes", sizeRoutes);
 
 // Gestion des erreurs
-app.use(ErrorHandler);
+const errorMiddleware = require("./middleware/Error");
+
+app.use(errorMiddleware)
 
 module.exports = app;

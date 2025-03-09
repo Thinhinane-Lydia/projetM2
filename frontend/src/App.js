@@ -17,6 +17,7 @@ const App = () => {
         <Route path="/categorie/:categoryId/sous-categorie/:subCategoryId" element={<HomePage />} />
         <Route path="/vendre" element={<HomePage />} /> {/* ✅ Gérer la vente sur HomePage */}
       </Routes>
+      
     </BrowserRouter>
   );
 };

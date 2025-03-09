@@ -1,116 +1,289 @@
-// import React, { useEffect, useState } from "react";
-// import { productData } from "../../static/data";
+
+
 // import { FiHeart, FiShoppingCart } from "react-icons/fi";
+// import { fetchProducts } from "../../utils/api";
 // import FilterMenu from "./FilterMenu";
+// import React, { useState, useEffect } from "react";
 
-// const ProductList = ({ activeCategory, activeSubCategory, searchTerm }) => {
-//     const [shuffledProducts, setShuffledProducts] = useState([]);
-//     const [filters, setFilters] = useState({});
+// const ProductList = ({ searchTerm, activeCategory, activeSubCategory, isVisible }) => {
+//   const [products, setProducts] = useState([]);
+//   const [favorites, setFavorites] = useState([]);
+//   const [cart, setCart] = useState([]);
+//   const [filters, setFilters] = useState({});
 
-//     useEffect(() => {
-//         const shuffled = [...productData].sort(() => Math.random() - 0.5);
-//         setShuffledProducts(shuffled);
-//     }, []);
+//   useEffect(() => {
+//     const getProducts = async () => {
+//       const data = await fetchProducts();
+//       setProducts(data.products);
+//     };
+//     getProducts();
+//   }, []);
 
-//     const filteredProducts = shuffledProducts.filter((product) => 
-//         (!activeCategory || product.categoryId === activeCategory) &&
-//         (!activeSubCategory || product.subCategoryId === activeSubCategory) &&
-//         (!filters.size || product.size === filters.size) &&
-//         (!filters.brand || product.brand === filters.brand) &&
-//         (!filters.condition || product.condition === filters.condition) &&
-//         (!filters.material || product.material === filters.material) &&
-//         (!filters.color || product.color === filters.color) &&
-//         (!filters.minPrice || product.price >= filters.minPrice) &&
-//         (!filters.maxPrice || product.price <= filters.maxPrice) &&
-//         (!searchTerm || product.name.toLowerCase().includes(searchTerm))
+//   const toggleFavorite = (productId) => {
+//     setFavorites((prev) =>
+//       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
 //     );
+//   };
 
-//     return (
-//         <div className="pt-24 w-full flex flex-col items-center justify-center py-10 px-6">
-            
-//             {/* ✅ Affichage du menu filtres UNIQUEMENT si une catégorie et sous-catégorie sont sélectionnées */}
-//             {activeCategory && activeSubCategory && (
-//                 <div className="w-full mt-4 px-6">
-//                     <FilterMenu filters={filters} setFilters={setFilters} />
-//                 </div>
-//             )}
+//   const toggleCart = (productId) => {
+//     setCart((prev) =>
+//       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
+//     );
+//   };
 
-//             {/* ✅ Grille des produits */}
-//             <div className="mt-6 w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-6">
-//                 {filteredProducts.length === 0 ? (
-//                     <p className="text-center text-gray-500 text-lg">
-//                         Désolé, aucun produit ne correspond à votre sélection.
-//                     </p>
-//                 ) : (
-//                     filteredProducts.map((product) => (
-//                         <div 
-//                             key={product.id} 
-//                             className="relative bg-white p-4 shadow-md rounded-lg border border-gray-200 transition-transform transform hover:scale-105 duration-200"
-//                         >
-//                             {/* ✅ Icônes favoris et panier */}
-//                             <div className="absolute top-2 right-2 flex flex-col space-y-2">
-//                                 <button className="bg-white p-2 rounded-full shadow-md border border-gray-300 hover:bg-green-100 transition-all duration-200">
-//                                     <FiShoppingCart size={20} className="text-green-600" />
-//                                 </button>
-//                                 <button className="bg-white p-2 rounded-full shadow-md border border-gray-300 hover:bg-red-100 transition-all duration-200">
-//                                     <FiHeart size={20} className="text-red-500" />
-//                                 </button>
-//                             </div>
+//   const applyFilters = (newFilters) => {
+//     setFilters(newFilters);
+//   };
 
-//                             {/* ✅ Image du produit agrandie */}
-//                             <img 
-//                                 src={product.image_Url[0].url} 
-//                                 alt={product.name} 
-//                                 className="w-full h-64 object-cover rounded-md"
-//                             />
+//   const filteredProducts = products.filter((product) =>
+//     (!searchTerm || product.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+//     (!activeCategory || product.category._id === activeCategory) &&
+//     (!activeSubCategory || product.subCategory._id === activeSubCategory) &&
+//     (!filters.size || product.size?._id === filters.size) &&
+//     (!filters.brand || product.brand === filters.brand) &&
+//     (!filters.material || product.material === filters.material) &&
+//     (!filters.color || product.color === filters.color) &&
+//     (!filters.condition || product.condition === filters.condition) &&
+//     (!filters.minPrice || product.price >= filters.minPrice) &&
+//     (!filters.maxPrice || product.price <= filters.maxPrice)
+//   );
 
-//                             {/* ✅ Nom et prix plus petits sur le côté */}
-//                             <div className="flex justify-between items-center mt-3">
-//                                 <h3 className="text-sm font-medium text-gray-800">{product.name}</h3>
-//                                 <p className="text-sm font-semibold text-gray-700">{product.price} €</p>
-//                             </div>
-//                         </div>
-//                     ))
-//                 )}
-//             </div>
+//   // Fonction pour obtenir une couleur pastel basée sur l'ID du produit
+//   const getProductColor = (productId) => {
+//     const bgColors = [
+//       "bg-pink-200", "bg-purple-200", "bg-blue-200", "bg-green-200",
+//       "bg-yellow-200", "bg-orange-200", "bg-indigo-200", "bg-red-200"
+//     ];
+//     const borderColors = [
+//       "border-pink-300", "border-purple-300", "border-blue-300", "border-green-300",
+//       "border-yellow-300", "border-orange-300", "border-indigo-300", "border-red-300"
+//     ];
+
+//     // Utilise l'ID du produit pour obtenir un index cohérent
+//     const index = productId.charCodeAt(0) % bgColors.length;
+
+//     return {
+//       bg: bgColors[index],
+//       border: borderColors[index]
+//     };
+//   };
+
+//   return (
+//     <div className={`px-4 ${isVisible ? "mt-0" : "mt-4"} bg-gray-100 shadow-sm`}>
+//       {activeCategory && activeSubCategory && (
+//         <div className="mb-6 pt-4">
+//           <FilterMenu
+//             activeCategory={activeCategory}
+//             activeSubCategory={activeSubCategory}
+//             applyFilters={applyFilters}
+//           />
 //         </div>
-//     );
+//       )}
+
+//       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-8">
+//         {filteredProducts.length === 0 ? (
+//           <div className="col-span-2 md:col-span-3 lg:col-span-4 text-center py-12">
+//             <p className="text-gray-500 text-lg">Aucun produit trouvé.</p>
+//             <p className="text-gray-400 mt-2">Essayez d'ajuster vos filtres de recherche.</p>
+//           </div>
+//         ) : (
+//           filteredProducts.map((product) => {
+//             const colors = getProductColor(product._id);
+//             return (
+//               <div
+//                 key={product._id}
+//                 className={`relative bg-white p-4 rounded-xl shadow-md border-2 ${colors.border} transition duration-300 hover:shadow-lg transform hover:-translate-y-1`}
+//               >
+//                 <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+//                   <button
+//                     onClick={() => toggleFavorite(product._id)}
+//                     className="bg-white p-2 rounded-full shadow-sm focus:outline-none"
+//                   >
+//                     <FiHeart
+//                       size={20}
+//                       className={`transition duration-300 ${favorites.includes(product._id)
+//                         ? "text-red-500 fill-red-500"
+//                         : "text-red-500 hover:text-red-500"
+//                         }`}
+//                     />
+//                   </button>
+//                   <button
+//                     onClick={() => toggleCart(product._id)}
+//                     className="bg-white p-2 rounded-full shadow-sm focus:outline-none"
+//                   >
+//                     <FiShoppingCart
+//                       size={20}
+//                       className={`transition duration-300 ${cart.includes(product._id)
+//                         ? "text-green-500 fill-green-500"
+//                         : "text-green-500 hover:text-green-500"
+//                         }`}
+//                     />
+//                   </button>
+//                 </div>
+
+
+//                 <div className={`w-full h-64 flex items-center justify-center overflow-hidden rounded-lg shadow-lg mb-4`}>
+//                   <img
+//                     src={product.images[0]?.url || "https://via.placeholder.com/250"}
+//                     alt={product.name}
+//                     className="w-full h-full object-contain hover:scale-105 transition duration-300"
+//                   />
+//                 </div>
+
+//                 <div className="mt-2 text-center">
+//                   <h3 className="text-gray-800 font-semibold text-md truncate">{product.name}</h3>
+//                   <p className="text-blue-500 font-bold text-lg mt-1">{product.price} DA</p>
+//                 </div>
+//               </div>
+//             );
+//           })
+//         )}
+//       </div>
+//     </div>
+//   );
 // };
 
 // export default ProductList;
-import React, { useEffect, useState } from "react";
-import { getAllProducts } from "../../utils/api";
 
-const ProductList = () => {
+import { FiHeart } from "react-icons/fi";
+import { fetchProducts } from "../../utils/api";
+import FilterMenu from "./FilterMenu";
+import React, { useState, useEffect } from "react";
+import {HiOutlineShoppingBag} from "react-icons/hi"
+
+const ProductList = ({ searchTerm, activeCategory, activeSubCategory, isVisible }) => {
   const [products, setProducts] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [filters, setFilters] = useState({});
 
   useEffect(() => {
-    // ✅ Récupérer les produits dès le chargement du composant
-    const fetchProducts = async () => {
-      try {
-        const data = await getAllProducts();
-        setProducts(data.products); // Mettre à jour l'état avec les produits récupérés
-      } catch (error) {
-        console.error("Impossible de récupérer les produits :", error);
-      }
+    const getProducts = async () => {
+      const data = await fetchProducts();
+      setProducts(data.products);
     };
-
-    fetchProducts();
+    getProducts();
   }, []);
 
+  const toggleFavorite = (productId) => {
+    setFavorites((prev) =>
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
+  };
+
+  const toggleCart = (productId) => {
+    setCart((prev) =>
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
+  };
+
+  const applyFilters = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  const filteredProducts = products.filter((product) =>
+    (!searchTerm || product.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (!activeCategory || product.category._id === activeCategory) &&
+    (!activeSubCategory || product.subCategory._id === activeSubCategory) &&
+    (!filters.size || product.size?._id === filters.size) &&
+    (!filters.brand || product.brand === filters.brand) &&
+    (!filters.material || product.material === filters.material) &&
+    (!filters.color || product.color === filters.color) &&
+    (!filters.condition || product.condition === filters.condition) &&
+    (!filters.minPrice || product.price >= filters.minPrice) &&
+    (!filters.maxPrice || product.price <= filters.maxPrice)
+  );
+
+  // Modifier les couleurs pour utiliser des tons de ambre/jaune et des neutres
+  const getProductColor = (productId) => {
+    const bgColors = [
+      "bg-amber-50", "bg-yellow-50", "bg-neutral-50", "bg-amber-100",
+      "bg-yellow-100", "bg-orange-50", "bg-neutral-100", "bg-yellow-50"
+    ];
+    const borderColors = [
+      "border-amber-300", "border-yellow-300", "border-amber-200", "border-yellow-200",
+      "border-amber-300", "border-yellow-300", "border-amber-200", "border-neutral-300"
+    ];
+
+    // Utilise l'ID du produit pour obtenir un index cohérent
+    const index = productId.charCodeAt(0) % bgColors.length;
+
+    return {
+      bg: bgColors[index],
+      border: borderColors[index]
+    };
+  };
+
   return (
-    <div className="product-list">
-      {products.length > 0 ? (
-        products.map((product) => (
-          <div key={product._id} className="product-card">
-            <img src={product.images[0]?.url} alt={product.name} />
-            <h3>{product.name}</h3>
-            <p>{product.price} €</p>
-          </div>
-        ))
-      ) : (
-        <p>Aucun produit disponible</p>
+    <div className={`px-4 ${isVisible ? "mt-0" : "mt-4"} bg-neutral-100 shadow-sm`}>
+      {activeCategory && activeSubCategory && (
+        <div className="mb-6 pt-4">
+          <FilterMenu
+            activeCategory={activeCategory}
+            activeSubCategory={activeSubCategory}
+            applyFilters={applyFilters}
+          />
+        </div>
       )}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-8">
+        {filteredProducts.length === 0 ? (
+          <div className="col-span-2 md:col-span-3 lg:col-span-4 text-center py-12">
+            <p className="text-neutral-500 text-lg">Aucun produit trouvé.</p>
+            <p className="text-neutral-400 mt-2">Essayez d'ajuster vos filtres de recherche.</p>
+          </div>
+        ) : (
+          filteredProducts.map((product) => {
+            const colors = getProductColor(product._id);
+            return (
+              <div
+                key={product._id}
+                className={`relative bg-white p-4 rounded-xl shadow-md border-2 ${colors.border} transition duration-300 hover:shadow-lg transform hover:-translate-y-1`}
+              >
+                <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+                  <button
+                    onClick={() => toggleFavorite(product._id)}
+                    className="bg-white p-2 rounded-full shadow-sm focus:outline-none hover:shadow-md transition-shadow"
+                  >
+                    <FiHeart
+                      size={20}
+                      className={`transition duration-300 ${favorites.includes(product._id)
+                        ? "text-red-800 fill-red-800"
+                        : "text-red-800 hover:fill-red-700"
+                        }`}
+                    />
+                  </button>
+                  <button
+                    onClick={() => toggleCart(product._id)}
+                    className="bg-white p-2 rounded-full shadow-sm focus:outline-none hover:shadow-md transition-shadow"
+                  >
+                    <HiOutlineShoppingBag
+                      size={20}
+                      className={`transition duration-300 ${cart.includes(product._id)
+                        ? "text-green-600 fill-green-700"
+                        : "text-green-600 hover:fill-green-700"
+                        }`}
+                    />
+                  </button>
+                </div>
+
+                <div className={`w-full h-64 flex items-center justify-center overflow-hidden rounded-lg shadow-lg mb-4 `}>
+                  <img
+                    src={product.images[0]?.url || "https://via.placeholder.com/250"}
+                    alt={product.name}
+                    className="w-full h-full object-contain hover:scale-105 transition duration-300"
+                  />
+                </div>
+
+                <div className="mt-2 text-center">
+                  <h3 className="text-neutral-800 font-semibold text-md truncate">{product.name}</h3>
+                  <p className="text-amber-800 font-bold text-lg mt-1">{product.price} DA</p>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };

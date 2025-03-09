@@ -1,11 +1,11 @@
+
 import { React, useState } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import styles from "../../styles/styles";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { server } from "../../server.js";
-
 import { toast } from "react-toastify";
+import { AiOutlineCheckCircle } from "react-icons/ai"; 
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,87 +15,88 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const res = await axios.post(
+      await axios.post(
         `${server}/user/login-user`,
         { email, password },
         { withCredentials: true }
       );
-
-      toast.success("✅ Connexion réussie !");
-      
-      // 🔹 Attendre avant de rediriger
+      toast.success("Connexion réussie !", {
+        icon: () => <AiOutlineCheckCircle color="#8B5E3C" size={22} />,
+      });
       setTimeout(() => navigate("/"), 1000);
     } catch (err) {
-      console.error("❌ Erreur lors de la connexion :", err);
-
-      // ✅ Vérification avant d'accéder à err.response.data.message
-      const errorMessage = err.response?.data?.message || "❌ Erreur inconnue. Veuillez réessayer.";
+      const errorMessage = err.response?.data?.message || "Erreur inconnue. Veuillez réessayer.";
       toast.error(errorMessage);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Login to your account
-        </h2>
-      </div>
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 relative px-4">
+      {/* Arrière-plan semi-transparent */}
+      <div className="absolute inset-0 bg-cover bg-center before:absolute before:inset-0 before:bg-black/5 before:backdrop-blur-md"
+     style={{ backgroundImage: "url('/boutique_clothing_store.jpg')" }}>
+</div>
+
+
+      {/* Conteneur principal */}
+      <div className="relative z-10 flex flex-col md:flex-row w-full md:w-[800px] h-auto md:h-[75vh] bg-white shadow-lg rounded-lg overflow-hidden">
+
+        {/* Partie gauche : Image (Masquée sur mobile) */}
+        <div className="hidden md:block md:w-1/2 bg-cover bg-center"
+             style={{ backgroundImage: "url('/boutique_clothing_store.jpg')" }}>
+        </div>
+
+        {/* Partie droite : Formulaire */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center p-8 md:p-10">
+          {/* ✅ Texte d’accroche amélioré */}
+          <h2 className="text-lg font-medium text-[#6D4C41] text-center mb-6 leading-relaxed">
+  Seconde main, premier choix <br />
+  <span className="text-[#8B5E3C] font-normal">Connectez-vous à votre espace Rewear</span>
+</h2>
+
+
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Adresse e-mail</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border border-[#B8AFA6] rounded-md bg-[#F5F3EE] focus:ring-[#8d694e] focus:border-[#8B5E3C] focus:outline-none"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+              <div className="relative">
                 <input
                   type={visible ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="w-full px-3 py-2 border border-[#B8AFA6] rounded-md bg-[#F5F3EE] focus:ring-[#8d694e] focus:border-[#8B5E3C] focus:outline-none"
                 />
                 {visible ? (
-                  <AiOutlineEye className="absolute right-2 top-2 cursor-pointer" size={25} onClick={() => setVisible(false)} />
+                  <AiOutlineEye className="absolute right-3 top-3 cursor-pointer text-[#8B5E3C]" size={20} onClick={() => setVisible(false)} />
                 ) : (
-                  <AiOutlineEyeInvisible className="absolute right-2 top-2 cursor-pointer" size={25} onClick={() => setVisible(true)} />
+                  <AiOutlineEyeInvisible className="absolute right-3 top-3 cursor-pointer text-[#8B5E3C]" size={20} onClick={() => setVisible(true)} />
                 )}
               </div>
             </div>
-            <div className="text-sm text-right">
-              <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                Forgot your password?
-              </Link>
-            </div>
-            <div>
-              <button type="submit" className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                Submit
-              </button>
-            </div>
-            <div className="flex justify-center mt-4">
-              <p>Not have an account?</p>
-              <Link to="/sign-up" className="text-blue-600 pl-2">
-                Sign Up
-              </Link>
-            </div>
+
+            {/* ✅ Bouton stylisé */}
+            <button 
+              type="submit" 
+              className="w-full py-3 bg-[#C7B8A6] text-[#5A4637] font-semibold rounded-md hover:bg-[#B5A89C] transition">
+              Se connecter
+            </button>
           </form>
+
+          {/* ✅ Lien vers l’inscription mieux espacé */}
+          <p className="text-center text-gray-700 mt-5">
+            Pas encore de compte ? <Link to="/sign-up" className="text-[#8B5E3C] font-normal">S'inscrire</Link>
+          </p>
         </div>
       </div>
     </div>
@@ -103,3 +104,4 @@ const Login = () => {
 };
 
 export default Login;
+

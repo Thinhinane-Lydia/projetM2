@@ -1,9 +1,9 @@
-
 const express = require("express");
 const ErrorHandler = require("./utils/ErrorHandler");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+
 require("dotenv").config({ path: "./backend/config/.env" }); // ✅ Charger dotenv dès le début
 
 const app = express();
@@ -21,11 +21,14 @@ app.use("/uploads", express.static("uploads"));
 // ✅ Configuration CORS (ajout de localhost)
 app.use(
   cors({
-    origin: "http://localhost:3000", // 🔹 Développement local
-
-    credentials: true,
+    origin: "http://localhost:3000", // Autorise uniquement ton frontend
+    credentials: true, // Autorise l'envoi des cookies (JWT, sessions, etc.)
+    methods: "GET,POST,PUT,DELETE", // Autorise ces méthodes HTTP
+    allowedHeaders: "Content-Type,Authorization", // Autorise ces headers
   })
 );
+
+
 
 // ✅ Middleware de gestion des erreurs
 app.use((err, req, res, next) => {
@@ -57,24 +60,3 @@ const errorMiddleware = require("./middleware/Error");
 app.use(errorMiddleware);
 
 module.exports = app;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

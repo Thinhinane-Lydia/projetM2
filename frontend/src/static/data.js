@@ -187,409 +187,222 @@ export const brandingData = [
   },
 ];
 
-// categories data
 export const categoriesData = [
   {
     id: 1,
-    title: "Computers and Laptops",
-    subTitle: "",
-    image_Url:
-      "https://cdn.shopify.com/s/files/1/1706/9177/products/NEWAppleMacbookProwithM1ProChip14InchLaptop2021ModelMKGQ3LL_A_16GB_1TBSSD_custommacbd.jpg?v=1659592838",
+    title: "Homme",
+    subCategories: [
+      {
+        id: 101,
+        title: "chaussure",
+      },
+      {
+        id: 102,
+        title: "haut",
+      },
+      {
+        id: 103,
+        title: "pantalon",
+      },
+      {
+        id: 104,
+        title: "accessoires",
+      },
+      {
+        id: 105,
+        title: "veste",
+      }
+    ],
+    image_Url: "https://i.pinimg.com/236x/15/5e/b2/155eb2ca89b851c0861c417e517e78c4.jpg",
   },
   {
     id: 2,
-    title: "cosmetics and body care",
-    subTitle: "",
-    image_Url:
-      "https://indian-retailer.s3.ap-south-1.amazonaws.com/s3fs-public/2021-07/kosme1.png",
+    title: "Femme",
+    subCategories: [
+      {
+        id: 201,
+        title: "chaussure",
+      },
+      {
+        id: 202,
+        title: "haut",
+      },
+      {
+        id: 203,
+        title: "pantalon",
+      },
+      {
+        id: 204,
+        title: "accessoires",
+      },
+      {
+        id: 205,
+        title: "veste",
+      },
+      {
+        id: 206,
+        title: "Jupe",
+      },
+      {
+        id: 207,
+        title: "short",
+      },
+      {
+        id: 208,
+        title: "robe",
+      }
+    ],
+    image_Url: "https://i.pinimg.com/236x/35/1d/e8/351de8f3934e4944a29af29ab87f1fff.jpg",
   },
   {
     id: 3,
-    title: "Accesories",
-    subTitle: "",
-    image_Url:
-      "https://img.freepik.com/free-vector/ordering-goods-online-internet-store-online-shopping-niche-e-commerce-website-mother-buying-babies-clothes-footwear-toys-infant-accessories_335657-2345.jpg?w=2000",
-  },
-  {
-    id: 4,
-    title: "Cloths",
-    subTitle: "",
-    image_Url:
-      "https://www.shift4shop.com/2015/images/industries/clothing/clothing-apparel.png",
-  },
-  {
-    id: 5,
-    title: "Shoes",
-    subTitle: "",
-    image_Url:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvBQPQMVNRd6TtDkGs2dCri0Y-rxKkFOiEWw&usqp=CAU",
-  },
-  {
-    id: 6,
-    title: "Gifts",
-    subTitle: "",
-    image_Url:
-      "https://securecdn.pymnts.com/wp-content/uploads/2014/11/Gifts-Photo-700x489.jpg",
-  },
-  {
-    id: 7,
-    title: "Pet Care",
-    subTitle: "",
-    image_Url: "https://cdn.openpr.com/T/c/Tc15444071_g.jpg",
-  },
-  {
-    id: 8,
-    title: "Mobile and Tablets",
-    subTitle: "",
-    image_Url:
-      "https://st-troy.mncdn.com/mnresize/1500/1500/Content/media/ProductImg/original/mpwp3tua-apple-iphone-14-256gb-mavi-mpwp3tua-637986832343472449.jpg",
-  },
-  {
-    id: 9,
-    title: "Music and Gaming",
-    subTitle: "",
-    image_Url:
-      "https://static.vecteezy.com/system/resources/previews/011/996/555/original/3d-black-headphone-illustration-ecommerce-icon-png.png",
-  },
-  {
-    id: 10,
-    title: "Others",
-    subTitle: "",
-    image_Url:
-      "https://searchspring.com/wp-content/uploads/2022/10/Hero-Image-Platform-Others-2.png",
-  },
+    title: "Enfant",
+    subCategories: [
+      {
+        id: 301,
+        title: "chaussure",
+      },
+      {
+        id: 302,
+        title: "haut",
+      },
+      {
+        id: 303,
+        title: "pantalon",
+      },
+      {
+        id: 304,
+        title: "accessoires",
+      },
+      {
+        id: 305,
+        title: "veste",
+      },
+      {
+        id: 306,
+        title: "Jupe",
+      },
+      {
+        id: 307,
+        title: "short",
+      },
+      {
+        id: 308,
+        title: "robe",
+      }
+    ],
+    image_Url: "https://i.pinimg.com/236x/fe/69/b7/fe69b7d60045739b2d6e99d91385c538.jpg",
+  }
 ];
 
 // product Data
 export const productData = [
   {
     id: 1,
-    category:"Computers and Laptops",
-    name: "MacBook pro M2 chipset 256gb ssd 8gb ram space-gray color with apple 1 year warranty",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://www.istorebangladesh.com/images/thumbs/0000286_macbook-pro-m1_550.png",
-      },
-      {
-        public_id: "test",
-        url: "https://www.istorebangladesh.com/images/thumbs/0000286_macbook-pro-m1_550.png",
-      },
-    ],
-    shop: {
-      name: "Apple inc.",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
-    price: 1099,
-    discount_price: 1049,
-    rating: 4,
-    total_sell: 35,
-    stock: 10,
+    categoryId: 1, // ✅ Correspond à "Homme"
+    subCategoryId: 105, // ✅ Correspond à "Veste"
+    name: "Veste en cuir noir homme",
+    description: "Veste en cuir noir pour homme, style biker.",
+    image_Url: [{ url: "https://i.pinimg.com/236x/89/85/03/898503d3eccf50ededc590520a1b0764.jpg" }],
+    price: 250,
+    discount_price: 199,
+    rating: 4.7,
+    stock: 15,
+    size:  "XL", // ✅ Taille disponible
+    color: "Noir", // ✅ Couleur
+    material: "Cuir", // ✅ Matière
+    condition: "Neuf", // ✅ État
+    marque:"chapal"
   },
   {
     id: 2,
-    category:"Mobile and Tablets",
-    name: "Iphone 14 pro max 256 gb ssd and 8 gb ram silver colour",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://m.media-amazon.com/images/I/31Vle5fVdaL.jpg",
-      },
-      {
-        public_id: "test",
-        url: "https://m.media-amazon.com/images/I/31Vle5fVdaL.jpg",
-      },
-    ],
-    shop: {
-      name: "Amazon Ltd",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
-    discount_price: 1099,
-    rating: 5,
-    total_sell: 80,
-    stock: 10,
-    category:"Mobile & Tablets"
+    categoryId: 2, // ✅ Correspond à "Femme"
+    subCategoryId: 202, // ✅ Correspond à "Haut"
+    name: "Blouse fluide imprimée",
+    description: "Blouse fluide pour femme avec un imprimé floral élégant.",
+    image_Url: [{ url: "https://i.pinimg.com/736x/cd/e5/d5/cde5d5b8d917e19e0502cfecb7d9f490.jpg" }],
+    price: 45,
+    discount_price: 35,
+    rating: 4.6,
+    stock: 20,
+    size: "S", // ✅ Taille disponible
+    color: "Multicolors", // ✅ Couleur
+    material: "Coton", // ✅ Matière
+    condition: "Bon état", // ✅ État
+    marque:"inconnu"
   },
   {
-    id: 1,
-    category:"Computers and Laptop",
-    name: "MacBook pro M2 chipset 256gb ssd 8gb ram space gray color with apple 1 year warranty",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://www.istorebangladesh.com/images/thumbs/0000286_macbook-pro-m1_550.png",
-      },
-      {
-        public_id: "test",
-        url: "https://www.istorebangladesh.com/images/thumbs/0000286_macbook-pro-m1_550.png",
-      },
-    ],
-    shop: {
-      name: "Apple inc.",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
-    price: 1099,
-    discount_price: 1049,
-    rating: 4,
-    total_sell: 75,
-    stock: 10,
-    category:"Computers & Laptop"
+    id: 3,
+    categoryId: 1, // ✅ Correspond à "Homme"
+    subCategoryId: 103, // ✅ Correspond à "Pantalon"
+    name: "Jean slim fit homme",
+    description: "Jean slim fit, coupe moderne et confortable.",
+    image_Url: [{ url: "https://i.pinimg.com/236x/f1/9b/cb/f19bcbc2d5e2be5f819524bbdb73ec92.jpg" }],
+    price: 60,
+    discount_price: 49,
+    rating: 4.5,
+    stock: 30,
+    size: "L", // ✅ Taille disponible
+    color: "Bleu", // ✅ Couleur
+    material: "Denim", // ✅ Matière
+    condition: "Neuf", // ✅ État
+    marque:"zara"
   },
   {
     id: 4,
-    category:"Others",
-    name: "New Fashionable Watch for men 2023 with multiple colors",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://i0.wp.com/eccocibd.com/wp-content/uploads/2022/01/1802NL02_1.png?fit=550%2C550&ssl=1",
-      },
-      {
-        public_id: "test",
-        url: "https://i0.wp.com/eccocibd.com/wp-content/uploads/2022/01/1802NL02_1.png?fit=550%2C550&ssl=1",
-      },
-    ],
-    shop: {
-      name: "Shahriar Watch House",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    category:"Others"
-    },
-    price: 100,
-    discount_price: 79,
-    rating: 4,
-    total_sell: 12,
-    stock: 10,
+    categoryId: 2, // ✅ Correspond à "Femme"
+    subCategoryId: 206, // ✅ Correspond à "Jupe"
+    name: "Jupe plissée élégante",
+    description: "Jupe plissée fluide pour femme, parfaite pour un look chic.",
+    image_Url: [{ url: "https://i.pinimg.com/236x/dd/64/92/dd64922fb2781c65bc16916e2ca62a0d.jpg" }],
+    price: 50,
+    discount_price: 39,
+    rating: 4.6,
+    stock: 25,
+    size:  "M", // ✅ Taille disponible
+    color: "Rose", // ✅ Couleur
+    material: "Polyester", // ✅ Matière
+    condition: "Neuf", // ✅ État
+    marque:"kiabi"
   },
   {
     id: 5,
-    category:"Shoes",
-    name: "New Trend shoes for gents with all sizes",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://mirzacdns3.s3.ap-south-1.amazonaws.com/cache/catalog/RLV0015/2-800x800.jpg",
-      },
-      {
-        public_id: "test",
-        url: "https://mirzacdns3.s3.ap-south-1.amazonaws.com/cache/catalog/RLV0015/2-800x800.jpg",
-      },
-    ],
-    shop: {
-      name: "Alisha Shoes Mart",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
+    categoryId: 2, // ✅ Correspond à "femme"
+    subCategoryId: 308, // ✅ Correspond à "robe"
+    name: "Robe d'été",
+    description: "Robe d'été pour femme, idéale pour vos sorties.",
+    image_Url: [{ url: "https://i.pinimg.com/236x/b0/d5/5b/b0d55bf462fd79bef4aebb8eccc65aa9.jpg" }],
+    price: 70,
+    discount_price: 59,
+    rating: 4.8,
+    stock: 15,
+    size: "S", // ✅ Taille disponible
+    color: "Blanc", // ✅ Couleur
+    material: "Coton", // ✅ Matière
+    condition: "Bon état", // ✅ État
+    marque:"zara"
+  },
+  {
+    id: 6,
+    categoryId: 1, // ✅ Correspond à "Homme"
+    subCategoryId: 101, // ✅ Correspond à "Chaussures
+    name: "Baskets tendance homme",
+    description: "Baskets tendance, confortables et modernes.",
+    image_Url: [{ url: "https://i.pinimg.com/236x/1f/43/c8/1f43c854c1bcb19885ceffa305eea531.jpg" }],
     price: 120,
-    discount_price: 89,
-    rating: 5,
-    total_sell: 49,
-    stock: 10,
-    category:"Shoes"
-  },
-  {
-    id: 1,
-    name: "Gaming Headphone Asus with mutiple color and free delivery",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://www.startech.com.bd/image/cache/catalog/headphone/havit/h763d/h763d-02-500x500.jpg",
-      },
-      {
-        public_id: "test",
-        url: "https://eratablet.com/wp-content/uploads/2022/08/H51ba6537405f4948972e293927673546u.jpg",
-      },
-    ],
-    shop: {
-      name: "Asus Ltd",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
-    price: 300,
-    discount_price: 239,
-    rating: 4.5,
-    reviews: [
-      {
-        user: {
-          // user object will be here
-        },
-        comment: "IT's so cool!",
-        rating: 5,
-      },
-    ],
-    total_sell: 20,
-    stock: 10,
-    category:"Music and Gaming"
-  },
-  {
-    id: 4,
-    name: "New Fashionable Watch for men 2023 with multiple colors",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://i0.wp.com/eccocibd.com/wp-content/uploads/2022/01/1802NL02_1.png?fit=550%2C550&ssl=1",
-      },
-      {
-        public_id: "test",
-        url: "https://i0.wp.com/eccocibd.com/wp-content/uploads/2022/01/1802NL02_1.png?fit=550%2C550&ssl=1",
-      },
-    ],
-    shop: {
-      name: "Shahriar Watch House",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
-    price: 100,
-    discount_price: 79,
-    rating: 4,
-    total_sell: 62,
-    stock: 10,
-  },
-  {
-    id: 1,
-    name: "Gaming Headphone Asus with mutiple color and free delivery",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://www.startech.com.bd/image/cache/catalog/headphone/havit/h763d/h763d-02-500x500.jpg",
-      },
-      {
-        public_id: "test",
-        url: "https://eratablet.com/wp-content/uploads/2022/08/H51ba6537405f4948972e293927673546u.jpg",
-      },
-    ],
-    shop: {
-      name: "Asus Ltd",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
-    price: 300,
-    discount_price: 239,
-    rating: 4.5,
-    reviews: [
-      {
-        user: {
-          // user object will be here
-        },
-        comment: "IT's so cool!",
-        rating: 5,
-      },
-    ],
-    total_sell: 20,
-    stock: 10,
-  },
-  {
-    id: 2,
-    category:"Mobile and Tablets",
-    name: "Iphone 14 pro max 256 gb ssd and 8 gb ram silver colour",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://m.media-amazon.com/images/I/31Vle5fVdaL.jpg",
-      },
-      {
-        public_id: "test",
-        url: "https://m.media-amazon.com/images/I/31Vle5fVdaL.jpg",
-      },
-    ],
-    shop: {
-      name: "Amazon Ltd",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
-    discount_price: 1099,
-    rating: 5,
-    total_sell: 20,
-    stock: 10,
-  },
-  {
-    id: 1,
-    category:"Music and Gaming",
-    name: "Gaming Headphone Asus with mutiple color and free delivery",
-    description:
-      "Product details are a crucial part of any eCommerce website or online marketplace. These details help the potential customers to make an informed decision about the product they are interested in buying. A well-written product description can also be a powerful marketing tool that can help to increase sales.Product details typically include information about the product's features, specifications, dimensions, weight, materials, and other relevant information that can help customers to understand the product better. The product details section should also include high-quality images and videos of the product, as well as customer reviews and ratings.",
-    image_Url: [
-      {
-        public_id: "test",
-        url: "https://www.startech.com.bd/image/cache/catalog/headphone/havit/h763d/h763d-02-500x500.jpg",
-      },
-      {
-        public_id: "test",
-        url: "https://eratablet.com/wp-content/uploads/2022/08/H51ba6537405f4948972e293927673546u.jpg",
-      },
-    ],
-    shop: {
-      name: "Asus Ltd",
-      shop_avatar: {
-        public_id: "test",
-        url: "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png",
-      },
-      ratings: 4.2,
-    },
-    price: 300,
-    discount_price: 239,
-    rating: 4.5,
-    reviews: [
-      {
-        user: {
-          // user object will be here
-        },
-        comment: "IT's so cool!",
-        rating: 5,
-      },
-    ],
-    total_sell: 20,
-    stock: 10,
-  },
+    discount_price: 99,
+    rating: 4.7,
+    stock: 35,
+    size: "40", // ✅ Taille (chaussures)
+    color: "gris", // ✅ Couleur
+    material: "Synthétique", // ✅ Matière
+    condition: "Neuf", // ✅ État
+    marque:"adidas"
+  }
 ];
+
+
+
 
 export const footerProductLinks = [
   {

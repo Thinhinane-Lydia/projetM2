@@ -1,17 +1,25 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LoginPage, SignupPage, ActivationPage } from "./Routes";
+import { Login, SignupPage, ActivationPage, HomePage } from "./Routes";
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/categorie/:categoryId" element={<HomePage />} />
+        <Route
+          path="/categorie/:categoryId/sous-categorie/:subCategoryId"
+          element={<HomePage />}
+        />
+        <Route path="/vendre" element={<HomePage />} />{" "}
+        {/* ✅ Gérer la vente sur HomePage */}
+        <Route path="/login" element={<Login />} />
         <Route path="/sign-up" element={<SignupPage />} />
         <Route path="/activation-success" element={<ActivationPage />} />
-
       </Routes>
       <ToastContainer
         position="bottom-center"

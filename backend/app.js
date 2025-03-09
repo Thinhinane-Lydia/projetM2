@@ -8,8 +8,12 @@ const cors = require("cors");
 app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
-app.use("/", express.static("uploads"));
-app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
+
+
+// app.use("/",express.static("uploads"));
+app.use("/uploads", express.static("uploads"));
+
+
 
 // config
 if (process.env.NODE_ENV !== "PRODUCTION") {
@@ -29,6 +33,7 @@ app.use("/api/v2/categories", categoryRoutes);//  Ajout des routes cat
 app.use("/api/v2/subcategories", subCategoryRoutes);//  Ajout des routes subcat
 app.use("/api/v2/products", productRoutes)//  Ajout des routes produits
 app.use("/api/v2/sizes", sizeRoutes);
+
 
 // Gestion des erreurs
 const errorMiddleware = require("./middleware/Error");

@@ -1,4 +1,6 @@
 require("dotenv").config({ path: "./backend/config/.env" });
+require("./model/Favorite");
+
 
 const app = require("./app");
 const connectDatabase = require("./db/Database");
@@ -16,6 +18,19 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
 
 // Connexion à la base de données
 connectDatabase();
+
+const Message = require('./model/Message'); // Assure-toi que le chemin est correct
+
+async function checkMessages() {
+    try {
+        const messages = await Message.find({});
+        console.log("📜 Tous les messages enregistrés en base de données :", messages);
+    } catch (error) {
+        console.error("❌ ERREUR MongoDB - Impossible de récupérer les messages :", error);
+    }
+}
+
+checkMessages();
 
 // Création du serveur
 const server = app.listen(process.env.PORT || 8000, () => {

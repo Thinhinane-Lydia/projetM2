@@ -1,63 +1,4 @@
-// const express = require("express");
-// const ErrorHandler = require("./utils/ErrorHandler");
-// const cookieParser = require("cookie-parser");
-// // const bodyParser = require("body-parser");
-// const cors = require("cors");
 
-// require("dotenv").config({ path: "./backend/config/.env" }); // ✅ Charger dotenv dès le début
-
-// const app = express();
-
-// // ✅ Activer les middlewares
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-
-// app.use(cookieParser());
-
-// app.use("/uploads", express.static("uploads"));
-
-// // ✅ Configuration CORS (ajout de localhost)
-// app.use(
-//   cors({
-//     origin: "http://localhost:3000", // Autorise uniquement ton frontend
-//     credentials: true, // Autorise l'envoi des cookies (JWT, sessions, etc.)
-//   })
-// );
-
-// // ✅ Middleware de gestion des erreurs
-// app.use((err, req, res, next) => {
-//   console.error("❌ Erreur détectée :", err.message);
-//   console.error("🔍 Détails :", err);
-
-//   res.status(err.statusCode || 500).json({
-//     success: false,
-//     message: err.message || "Erreur serveur. Veuillez réessayer plus tard.",
-//   });
-// });
-
-// // Import routes
-// const categoryRoutes = require("./routes/category");
-// const subCategoryRoutes = require("./routes/subcategory");
-// const productRoutes = require("./routes/product");
-// const sizeRoutes = require("./routes/size");
-// const user = require("./controller/user");
-// const commentRoutes = require("./routes/comment");
-// const notificationRoutes = require("./routes/notification");
-
-// app.use("/api/v2/notifications", notificationRoutes);
-// app.use("/api/v2/comments", commentRoutes);
-// app.use("/api/v2/user", user);
-// app.use("/api/v2/categories", categoryRoutes); //  Ajout des routes cat
-// app.use("/api/v2/subcategories", subCategoryRoutes); //  Ajout des routes subcat
-// app.use("/api/v2/products", productRoutes); //  Ajout des routes produits
-// app.use("/api/v2/sizes", sizeRoutes);
-
-// // Gestion des erreurs
-// const errorMiddleware = require("./middleware/Error");
-
-// app.use(errorMiddleware);
-
-// module.exports = app;
 const express = require("express");
 const ErrorHandler = require("./utils/ErrorHandler");
 const cookieParser = require("cookie-parser");
@@ -68,6 +9,7 @@ const socketIo = require("socket.io");
 require("dotenv").config({ path: "./backend/config/.env" }); // ✅ Charger dotenv dès le début
 
 const app = express();
+ 
 
 // ✅ Création du serveur HTTP pour supporter `Socket.io`
 const server = http.createServer(app);
@@ -127,6 +69,11 @@ const user = require("./controller/user");
 const commentRoutes = require("./routes/comment");
 const notificationRoutes = require("./routes/notification");
 const searchHistoryRoutes = require("./routes/searchHistoryRoutes");
+const favoriteRoutes = require("./routes/favorite");
+const cartRoutes = require("./routes/cartRoutes");
+const messageRoutes = require('./routes/messageRoutes');
+const conversationRoutes = require('./routes/conversationRoutes');
+
 
 app.use("/api/v2/notifications", notificationRoutes);
 app.use("/api/v2/comments", commentRoutes);
@@ -135,13 +82,18 @@ app.use("/api/v2/categories", categoryRoutes);
 app.use("/api/v2/subcategories", subCategoryRoutes);
 app.use("/api/v2/products", productRoutes);
 app.use("/api/v2/sizes", sizeRoutes);
+app.use("/api/v2/favorites", favoriteRoutes);
+app.use("/api/v2/cart", cartRoutes); 
+app.use('/api/v2/messages' ,messageRoutes);
+app.use('/api/v2/conversations',conversationRoutes);
 app.use("/api/v2/search-history", searchHistoryRoutes); 
 
-// ✅ Exporter `io` pour l'utiliser dans d'autres fichiers
-module.exports = { app, server, io, sendNotificationSocket };
+
 
 // ✅ Lancer le serveur
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
 });
+// ✅ Exporter `io` pour l'utiliser dans d'autres fichiers
+module.exports = { app, server, io, sendNotificationSocket };

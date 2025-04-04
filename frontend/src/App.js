@@ -1,5 +1,12 @@
 import React from "react";
+import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
+import { CartProvider } from "./components/cart/Cart";
+
+import PrivateRoute from "./components/PrivateRoute";
+ 
 import {
   Login,
   SignupPage,
@@ -10,14 +17,21 @@ import {
   InfoProdcutPage,
   HistoriquePage,
   ProfileEditPage,
-  AdminPage
+  AdminPage,
+  FavoritesPage,
+  CartPage ,
+  MessagesPage 
 } from "./Routes";
-import "./App.css";
-import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
+
+ 
+
+
 
 const App = () => {
   return (
+    <CartProvider>
+
+   
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -26,7 +40,7 @@ const App = () => {
           path="/categorie/:categoryId/sous-categorie/:subCategoryId"
           element={<HomePage />}
         />
-        <Route path="/vendre" element={<HomePage />} />
+        
         {/* ✅ Gérer la vente sur HomePage */}
         <Route path="/login" element={<Login />} />
         <Route path="/sign-up" element={<SignupPage />} />
@@ -39,6 +53,13 @@ const App = () => {
         <Route path="/Historique" element={<HistoriquePage />} />
         <Route path="/Edit" element={<ProfileEditPage />} />
         <Route path="/Admin" element={<AdminPage />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route 
+  path="/messages/*" 
+  element={<PrivateRoute><MessagesPage /></PrivateRoute>}
+/>
+
       </Routes>
       <ToastContainer
         position="bottom-center"
@@ -53,6 +74,7 @@ const App = () => {
         theme="light"
       />
     </BrowserRouter>
+    </CartProvider>
   );
 };
 

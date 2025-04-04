@@ -6,6 +6,7 @@ const uploadDir = "uploads/";
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
     console.log("📁 Dossier 'uploads' créé !");
+
 }
 
 const storage = multer.diskStorage({
@@ -20,6 +21,7 @@ const storage = multer.diskStorage({
         cb(null, filename + "-" + uniqueSuffix + ".png");
     },
 });
+
 
 const upload = multer({ storage: storage });
 

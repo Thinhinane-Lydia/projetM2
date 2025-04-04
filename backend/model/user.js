@@ -43,9 +43,11 @@ const userSchema = new mongoose.Schema({
       },
     }
   ],
-  role:{
+ 
+  role: {
     type: String,
-    default: "user",
+    default: "user",  // Valeur par défaut
+    enum: ["user", "admin"],// Valeurs possibles : 'user' ou 'admin'
   },
   isActivated: {
     type: Boolean,
@@ -92,3 +94,4 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
 };
 
 module.exports = mongoose.model("User", userSchema);
+

@@ -1,6 +1,8 @@
 const Size = require("../model/Size");
 const ErrorHandler = require("../utils/ErrorHandler");
 const SubCategory =require("../model/SubCategory");
+
+
 exports.createSize = async (req, res, next) => {
   try {
     const { name } = req.body;
@@ -42,3 +44,23 @@ exports.getSizesBySubCategory = async (req, res, next) => {
     next(error);
   }
 };
+exports.deleteSize = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Recherche la taille par son ID
+    const size = await Size.findById(id);
+    if (!size) {
+      return next(new ErrorHandler("Taille non trouvée", 404)); // Si la taille n'existe pas
+    }
+
+    // Utilise `findByIdAndDelete` au lieu de `remove`
+    await Size.findByIdAndDelete(id);  // Cette méthode supprime directement l'élément par ID
+
+    // Réponse de succès
+    res.status(200).json({ success: true, message: "Taille supprimée avec succès" });
+  } catch (error) {
+    next(error);  // Gère les erreurs éventuelles
+  }
+};
+

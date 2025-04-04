@@ -1,182 +1,371 @@
 
-// // import React from "react";
-// // import { Link } from "react-router-dom";
-// // import { AiOutlineSearch } from "react-icons/ai";
-// // import { FiUser, FiHeart, FiShoppingCart } from "react-icons/fi";
-// // import { IoMdNotificationsOutline } from "react-icons/io";
-// // import { BsChatDots } from "react-icons/bs";
-// // import logo from "../../Assests/logo.png";
-// // import CategorySelector from "./CategorySelector";
-
-// // const Header = ({ setSearchTerm, setActiveCategory, activeCategory, setIsVisible }) => {
-// //   return (
-// //     <div className="fixed top-0 left-0 w-full z-50 bg-gray-100 shadow-md border-b">
-// //       <div className="flex items-center justify-between px-4 py-2 max-w-7xl mx-auto">
-// //         <Link to="/" className="flex items-center">
-// //           <img src={logo} alt="logo" className="w-24 h-auto" />
-// //         </Link>
-
-// //         {/* Barre de recherche */}
-// //         <div className="relative w-[55%] max-w-[650px] flex items-center border border-gray-400 rounded-full bg-gray-100">
-// //           <input
-// //             type="text"
-// //             placeholder="Rechercher un produit..."
-// //             onChange={(e) => setSearchTerm(e.target.value)}
-// //             className="h-10 w-full px-4 text-sm bg-transparent outline-none"
-// //           />
-// //           <AiOutlineSearch size={20} className="absolute right-4 text-gray-500 cursor-pointer" />
-// //         </div>
-
-// //         {/* Icônes */}
-// //         <div className="flex items-center gap-5 text-gray-700 text-sm">
-// //           <Link to="/messages"><BsChatDots size={20} /></Link>
-// //           <Link to="/notifications"><IoMdNotificationsOutline size={22} /></Link>
-// //           <Link to="/favorites"><FiHeart size={18} /></Link>
-// //           <Link to="/cart"><FiShoppingCart size={18} /></Link>
-// //           <Link to="/login"><FiUser size={18} /></Link>
-// //         </div>
-// //       </div>
-
-// //       {/* Gestion des catégories */}
-// //       <CategorySelector 
-// //         activeCategory={activeCategory}
-// //         setActiveCategory={setActiveCategory} 
-// //         setIsVisible={setIsVisible} 
-// //       />
-// //     </div>
-// //   );
-// // };
-
-// // export default Header;
-// import React from "react";
-// import { Link } from "react-router-dom";
-// import { BiSearchAlt2 } from "react-icons/bi";
-// import { HiOutlineUser, HiOutlineShoppingBag } from "react-icons/hi";
-// import { RiHeartLine, RiMessage3Line } from "react-icons/ri";
-// import { IoNotificationsOutline } from "react-icons/io5";
-// import { MdOutlineSell } from "react-icons/md";
-// import logo from "../../Assests/logo.png";
-// import CategorySelector from "./CategorySelector";
-
-// const Header = ({ setSearchTerm, setActiveCategory, activeCategory, setIsVisible }) => {
-//   return (
-//     <div className="fixed top-0 left-0 w-full z-50 bg-white shadow-md border-b">
-//       <div className="flex items-center justify-between px-4 py-2 max-w-7xl mx-auto">
-//         <Link to="/" className="flex items-center">
-//           <img src={logo} alt="logo" className="w-24 h-auto" />
-//         </Link>
-
-//         {/* Barre de recherche */}
-//         <div className="relative w-[55%] max-w-[650px] flex items-center border border-gray-300 rounded-full bg-gray-50">
-//           <input
-//             type="text"
-//             placeholder="Rechercher un produit..."
-//             onChange={(e) => setSearchTerm(e.target.value)}
-//             className="h-10 w-full px-4 text-sm bg-transparent outline-none"
-//           />
-//           <BiSearchAlt2 size={22} className="absolute right-4 text-gray-500 cursor-pointer hover:text-gray-700" />
-//         </div>
-
-//         {/* Icônes */}
-//         <div className="flex items-center gap-5 text-gray-600">
-//           <Link to="/messages" className="relative hover:text-gray-800 transition-colors duration-200">
-//             <RiMessage3Line size={22} />
-//           </Link>
-//           <Link to="/notifications" className="relative hover:text-gray-800 transition-colors duration-200">
-//             <IoNotificationsOutline size={24} />
-//           </Link>
-//           <Link to="/favorites" className="relative hover:text-gray-800 transition-colors duration-200">
-//             <RiHeartLine size={22} />
-//           </Link>
-//           <Link to="/cart" className="relative hover:text-gray-800 transition-colors duration-200">
-//             <HiOutlineShoppingBag size={22} />
-//           </Link>
-//           <Link to="/login" className="relative hover:text-gray-800 transition-colors duration-200">
-//             <HiOutlineUser size={22} />
-//           </Link>
-//         </div>
-        
-//         {/* Bouton Vendre (à droite) */}
-//         <Link to="/vendre" className="flex items-center gap-1 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200">
-//           <MdOutlineSell size={18} />
-//           <span>Vendre mes articles</span>
-//         </Link>
-//       </div>
-
-//       {/* Gestion des catégories */}
-//       <CategorySelector 
-//         activeCategory={activeCategory}
-//         setActiveCategory={setActiveCategory} 
-//         setIsVisible={setIsVisible} 
-//       />
-//     </div>
-//   );
-// };
-
-// export default Header;
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { BiSearchAlt2 } from "react-icons/bi";
-import { HiOutlineUser, HiOutlineShoppingBag } from "react-icons/hi";
-import { RiHeartLine, RiMessage3Line } from "react-icons/ri";
+import { HiOutlineShoppingBag } from "react-icons/hi";
+import { RiHeartLine, RiMessage3Line, RiLogoutBoxLine } from "react-icons/ri";
 import { IoNotificationsOutline } from "react-icons/io5";
-import { MdOutlineSell } from "react-icons/md";
+import { MdOutlineSell, MdOutlineAccountCircle, MdAdminPanelSettings } from "react-icons/md";
+import { HiOutlineUser } from "react-icons/hi";
+import { AiOutlineHistory } from "react-icons/ai";
+import Popup from "../Popup/Popup";
+import LogoutConfirmPopup from "../Popup/LogoutConfirmPopup";
+import { fetchUser, fetchProducts, logout, saveSearchHistory } from "../../utils/api";
 import logo from "../../Assests/logo.png";
 import CategorySelector from "./CategorySelector";
 
-const Header = ({ setSearchTerm, setActiveCategory, activeCategory, setIsVisible }) => {
+const Header = ({ setSearchTerm, setActiveCategory, activeCategory, setIsVisible, showCategories = true, refreshProducts }) => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showPopup, setShowPopup] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchInput, setSearchInput] = useState(""); 
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await fetchProducts();
+        setProducts(data.products || []);
+      } catch (error) {
+        console.error("Erreur lors du chargement des produits :", error);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const response = await fetchUser();
+        if (response.success) {
+          setUser(response.user);
+        }
+      } catch (error) {
+        console.error("Erreur récupération utilisateur :", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getUser();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showProfileMenu && !event.target.closest('.profile-menu-container')) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileMenu]);
+
+  const handleSearchInputChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchInput(query);
+    
+    if (query.length > 0) {
+      const filtered = products.filter((product) =>
+        product.name.toLowerCase().includes(query)
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts([]);
+    }
+  };
+
+  const handleSearchClick = async () => {
+    setSearchTerm(searchInput);
+    
+    if (searchInput.length > 0) {
+      const filtered = products.filter((product) =>
+        product.name.toLowerCase().includes(searchInput)
+      );
+      const productIds = filtered.map((product) => product._id);
+      
+      try {
+        const userResponse = await fetchUser();
+        if (userResponse.success) {
+          await saveSearchHistory({
+            searchTerm: searchInput,
+            productIds,
+          });
+        }
+      } catch (error) {
+        console.error("Erreur lors de l'enregistrement de la recherche", error);
+      }
+    }
+    
+    setFilteredProducts([]);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    handleSearchClick();
+  };
+
+  const handleProtectedClick = (e, path) => {
+    if (!user && !loading) {
+      e.preventDefault();
+      setShowPopup(true);
+    } else {
+      window.location.href = path;
+    }
+  };
+
+  const handleProductClick = (productId) => {
+    navigate(`/InfoProduct/${productId}`);
+    setFilteredProducts([]);
+  };
+
+  const openLogoutConfirmation = () => {
+    setShowLogoutPopup(true);
+    setShowProfileMenu(false);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      const response = await logout();
+      if (response.success) {
+        navigate("/");
+        setUser(null);
+      } else {
+        console.error("Échec de la déconnexion:", response.message);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+    }
+  };
+
+  const toggleProfileMenu = () => {
+    setShowProfileMenu(!showProfileMenu);
+  };
+  
+  const handleLogoClick = (e) => {
+    e.preventDefault();
+    if (setSearchTerm) setSearchTerm('');
+    if (setActiveCategory) setActiveCategory(null);
+    if (refreshProducts) refreshProducts();
+    navigate('/');
+  };
+
   return (
-    <div className="fixed top-0 left-0 w-full z-50 bg-neutral-100 shadow-md border-b border-neutral-200">
-      <div className="flex items-center justify-between px-4 py-2 max-w-7xl mx-auto">
-        <Link to="/" className="flex items-center">
-          <img src={logo} alt="logo" className="w-24 h-auto" />
-        </Link>
+    <div className="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200 shadow-lg">
+      <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
+        <a href="/" onClick={handleLogoClick} className="flex items-center">
+          <img src={logo} alt="logo" className="w-24 h-auto transform hover:scale-105 transition-transform" />
+        </a>
 
-        {/* Barre de recherche */}
-        <div className="relative w-[55%] max-w-[650px] flex items-center border border-neutral-300 rounded-full bg-white hover:border-amber-700 transition-colors">
-          <input
-            type="text"
-            placeholder="Rechercher un produit..."
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-10 w-full px-4 text-sm bg-transparent outline-none text-neutral-800 focus:ring-1 focus:ring-amber-700 rounded-full"
+        <div className="relative w-[55%] max-w-[650px]">
+          <form onSubmit={handleSearchSubmit} className="flex items-center">
+            <div className={`flex items-center border-2 ${searchFocused ? 'border-amber-500' : 'border-gray-200'} rounded-full bg-white transition-all duration-300 w-full`}>
+              <input
+                type="text"
+                placeholder="Rechercher un produit..."
+                value={searchInput}
+                onChange={handleSearchInputChange}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                className="h-11 w-full px-5 text-sm bg-transparent outline-none text-gray-800 rounded-full"
+              />
+              <button
+                type="button"
+                className={`w-10 h-10 rounded-full mr-1 flex items-center justify-center ${searchFocused ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-600'} transition-all duration-300 cursor-pointer hover:bg-amber-600`}
+                onClick={handleSearchClick}
+              >
+                <BiSearchAlt2 size={20} />
+              </button>
+            </div>
+          </form>
+          {filteredProducts.length > 0 && (
+            <ul className="absolute z-50 left-0 w-full bg-white border border-gray-200 rounded-xl mt-2 shadow-xl max-h-80 overflow-y-auto divide-y divide-gray-100">
+              {filteredProducts.map((product) => (
+                <li
+                  key={product._id}
+                  className="px-4 py-3 hover:bg-amber-50 cursor-pointer flex items-center transition-colors duration-200 group"
+                  onClick={() => handleProductClick(product._id)}
+                >
+                  {product.thumbnail && (
+                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 mr-4 shadow-sm transition-all duration-300 group-hover:shadow-md">
+                      <img
+                        src={product.thumbnail}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900 group-hover:text-amber-700 transition-colors">{product.name}</p>
+                    {product.description && (
+                      <p className="text-xs text-gray-500 mt-1 truncate">{product.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center ml-2">
+                    {product.price && (
+                      <span className="text-amber-600 font-semibold mr-3">{product.price} DA</span>
+                    )}
+                    <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 text-gray-600">
+          <IconButton 
+            icon={<RiMessage3Line size={20} />} 
+            href="/messages" 
+            onClick={(e) => handleProtectedClick(e, "/messages")} 
           />
-          <BiSearchAlt2 size={22} className="absolute right-4 text-neutral-600 cursor-pointer hover:text-amber-800" />
+          <IconButton 
+            icon={<IoNotificationsOutline size={22} />} 
+            href="/notifications" 
+            onClick={(e) => handleProtectedClick(e, "/notifications")} 
+          />
+          <IconButton 
+            icon={<RiHeartLine size={20} />} 
+            href="/favorites" 
+            onClick={(e) => handleProtectedClick(e, "/favorites")} 
+          />
+          <IconButton 
+            icon={<HiOutlineShoppingBag size={20} />} 
+            href="/cart" 
+            onClick={(e) => handleProtectedClick(e, "/cart")} 
+          />
+
+          {!loading && (
+            user ? (
+              <div className="profile-menu-container relative ml-1">
+                <button 
+                  className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-200 hover:border-amber-400 focus:border-amber-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50"
+                  onClick={toggleProfileMenu}
+                >
+                  <img src={`http://localhost:8000${user.avatar?.url}`} alt="Profil" className="w-full h-full object-cover" />
+                </button>
+                
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-100 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{user.username || user.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                    <Link 
+                      to="/Profil" 
+                      className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <MdOutlineAccountCircle size={18} className="mr-3 text-amber-500" />
+                      Mon profil
+                    </Link>
+                    <Link 
+                      to="/Historique" 
+                      className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <AiOutlineHistory size={18} className="mr-3 text-amber-500" />
+                      Historique de recherche
+                    </Link>
+                    <Link 
+                      to="/messages" 
+                      className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <RiMessage3Line size={18} className="mr-3 text-amber-500" />
+                      Messagerie
+                    </Link>
+
+                    {user.role === "admin" && (
+                      <Link 
+                        to="/admin" 
+                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <MdAdminPanelSettings size={18} className="mr-3 text-green-500" />
+                        Tableau de bord Admin
+                      </Link>
+                    )}
+
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button 
+                      onClick={openLogoutConfirmation}
+                      className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors w-full text-left"
+                    >
+                      <RiLogoutBoxLine size={18} className="mr-3 text-red-500" />
+                      Se déconnecter
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="ml-1 group">
+                <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center bg-white group-hover:bg-amber-50 transition-colors duration-300">
+                  <HiOutlineUser size={20} className="text-gray-600 group-hover:text-amber-600 transition-colors duration-300" />
+                </div>
+              </Link>
+            )
+          )}
         </div>
 
-        {/* Icônes */}
-        <div className="flex items-center gap-5 text-amber-800">
-          <Link to="/messages" className="relative hover:text-amber-950 transition-colors duration-200">
-            <RiMessage3Line size={22} />
-          </Link>
-          <Link to="/notifications" className="relative hover:text-amber-950 transition-colors duration-200">
-            <IoNotificationsOutline size={24} />
-          </Link>
-          <Link to="/favorites" className="relative hover:text-amber-950 transition-colors duration-200">
-            <RiHeartLine size={22} />
-          </Link>
-          <Link to="/cart" className="relative hover:text-amber-950 transition-colors duration-200">
-            <HiOutlineShoppingBag size={22} />
-          </Link>
-          <Link to="/login" className="relative hover:text-amber-950 transition-colors duration-200">
-            <HiOutlineUser size={22} />
-          </Link>
-        </div>
-        
-        {/* Bouton Vendre (à droite) */}
-        <Link to="/vendre" className="flex items-center gap-1 bg-amber-800 hover:bg-amber-900 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 shadow-md hover:shadow-lg">
+        <button
+          onClick={(e) => handleProtectedClick(e, "/Sell")}
+          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg transform hover:translate-y-[-2px]"
+        >
           <MdOutlineSell size={18} />
-          <span>Vendre mes articles</span>
-        </Link>
+          <span>Vendre</span>
+        </button>
       </div>
 
-      {/* Gestion des catégories */}
-      <CategorySelector 
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory} 
-        setIsVisible={setIsVisible} 
+      {showCategories && (
+        <CategorySelector activeCategory={activeCategory} setActiveCategory={setActiveCategory} setIsVisible={setIsVisible} />
+      )}
+
+      {showPopup && <Popup message="Veuillez vous connecter pour accéder à cette fonctionnalité." onClose={() => setShowPopup(false)} />}
+      
+      <LogoutConfirmPopup 
+        isOpen={showLogoutPopup}
+        onClose={() => setShowLogoutPopup(false)}
+        onConfirm={() => {
+          setShowLogoutPopup(false);
+          confirmLogout();
+        }}
       />
     </div>
   );
 };
+
+const IconButton = ({ icon, href, onClick }) => (
+  <a 
+    href={href} 
+    onClick={onClick} 
+    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-amber-50 transition-colors duration-300 group"
+  >
+    <div className="text-gray-500 group-hover:text-amber-600 transition-colors duration-300">
+      {icon}
+    </div>
+  </a>
+);
 
 export default Header;

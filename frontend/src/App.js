@@ -1,20 +1,22 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Login, SignupPage, ActivationPage, HomePage } from "./Routes";
+import { Login, SignupPage, ActivationPage, HomePage,FavoritesPage,CartPage } from "./Routes";
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import { CartProvider } from "./components/cart/Cart";
+import MessagesPage from './pages/MessagesPage';
+import PrivateRoute from "./components/PrivateRoute";
+
 
  
 
 
-
-
-
-
-
 const App = () => {
   return (
+    <CartProvider>
+
+   
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -28,6 +30,13 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/sign-up" element={<SignupPage />} />
         <Route path="/activation-success" element={<ActivationPage />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route 
+  path="/messages/*" 
+  element={<PrivateRoute><MessagesPage /></PrivateRoute>}
+/>
+
       </Routes>
       <ToastContainer
   position="bottom-center"
@@ -44,6 +53,7 @@ const App = () => {
 
 
     </BrowserRouter>
+    </CartProvider>
   );
 };
 

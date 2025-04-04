@@ -286,6 +286,7 @@ router.post("/login-user", catchAsyncError(async (req, res, next) => {
         if (!isPasswordValid) {
             return next(new ErrorHandler("Mot de passe incorrect, veuillez vérifier vos identifiants.", 400));
         }
+        console.log("Token généré :", jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "7d" }));
 
         sendToken(user, 201, res);
     } catch (error) {
@@ -310,5 +311,30 @@ router.get("/getuser", isAuthenticated, catchAsyncError(async (req, res, next) =
         user,
     });
 }));
+
+
+router.get('/search', isAuthenticated, async (req, res) => {
+    try {
+      const { query } = req.query;
+      console.log("🔍 Recherche d'utilisateurs pour:", query);
+      
+      if (!query) {
+        return res.status(400).json({ success: false, message: "Paramètre de recherche manquant" });
+      }
+      
+      const results = await User.find({
+        $or: [
+          { name: { $regex: query, $options: 'i' } },
+          { email: { $regex: query, $options: 'i' } }
+        ]
+      }).select('_id name email avatar');
+      
+      console.log("✅ Résultats trouvés:", results);
+      res.status(200).json({ success: true, data: results });
+    } catch (error) {
+      console.error("❌ Erreur lors de la recherche d'utilisateurs:", error);
+      res.status(500).json({ success: false, message: "Erreur serveur" });
+    }
+  });
 
 module.exports = router;

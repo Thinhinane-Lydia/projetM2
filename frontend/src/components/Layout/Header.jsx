@@ -169,12 +169,7 @@ const Header = ({ setSearchTerm, setActiveCategory, activeCategory, setIsVisible
         </Link>
       </div>
 
-      {/* Gestion des catégories */}
-      <CategorySelector 
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory} 
-        setIsVisible={setIsVisible} 
-      />
+     
     </div>
   );
 };

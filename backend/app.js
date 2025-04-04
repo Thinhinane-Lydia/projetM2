@@ -3,10 +3,12 @@ const ErrorHandler = require("./utils/ErrorHandler");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+ // ✅ Import correct
 
 require("dotenv").config({ path: "./backend/config/.env" }); // ✅ Charger dotenv dès le début
 
 const app = express();
+ 
 
 // ✅ Activer les middlewares
 app.use(express.json());
@@ -28,7 +30,7 @@ app.use(
   })
 );
 
-
+ 
 
 // ✅ Middleware de gestion des erreurs
 app.use((err, req, res, next) => {
@@ -47,16 +49,25 @@ const subCategoryRoutes = require("./routes/subcategory");
 const productRoutes = require("./routes/product");
 const sizeRoutes = require("./routes/size");
 const user = require("./controller/user");
+const favoriteRoutes = require("./routes/favorite");
+const cartRoutes = require("./routes/cartRoutes");
+const messageRoutes = require('./routes/messageRoutes');
+const conversationRoutes = require('./routes/conversationRoutes');
+
 
 app.use("/api/v2/user", user);
 app.use("/api/v2/categories", categoryRoutes); //  Ajout des routes cat
 app.use("/api/v2/subcategories", subCategoryRoutes); //  Ajout des routes subcat
 app.use("/api/v2/products", productRoutes); //  Ajout des routes produits
 app.use("/api/v2/sizes", sizeRoutes);
-
+app.use("/api/v2/favorites", favoriteRoutes);
+app.use("/api/v2/cart", cartRoutes); 
+app.use('/api/v2/messages' ,messageRoutes);
+app.use('/api/v2/conversations',conversationRoutes);
 // Gestion des erreurs
 const errorMiddleware = require("./middleware/Error");
 
 app.use(errorMiddleware);
+
 
 module.exports = app;

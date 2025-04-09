@@ -335,15 +335,18 @@ const ConversationsList = () => {
   }, [searchQuery, handleSearchUser]);
 
   // Fonction pour obtenir le nom d'affichage
+  
+
   const getDisplayName = useCallback((participant) => {
     if (!participant) return "Utilisateur inconnu";
     
-    if (participant.username) return participant.username;
-    if (participant.firstName && participant.lastName) return `${participant.firstName} ${participant.lastName}`;
-    if (participant.firstName) return participant.firstName;
-    
+    // Si un nom est disponible, utilise-le
+    if (participant.name) return participant.name;
+  
+    // Sinon, affiche "Utilisateur" par défaut
     return "Utilisateur";
   }, []);
+  
 
   // Fonction pour obtenir l'autre participant
   const getOtherParticipant = useCallback((conversation) => {
@@ -386,6 +389,8 @@ const ConversationsList = () => {
     }
   };
 
+
+  
   // Formatter la date du dernier message
   const formatLastMessageTime = (dateString) => {
     if (!dateString) return '';

@@ -1,13 +1,12 @@
 
-
 // import React, { useState, useEffect } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
 // import { fetchProducts, fetchUser, deleteProduct } from "../../utils/api";
-// import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
+// import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2, FiMessageCircle } from "react-icons/fi";
 // import { HiOutlineShoppingBag } from "react-icons/hi";
 // import ProductComments from "./ProductComments";
 // import Popup from "../Popup/Popup";
-
+ 
 // const ProductDetail = () => {
 //   const { productId } = useParams();
 //   const navigate = useNavigate();
@@ -22,6 +21,8 @@
 //   const [showPopup, setShowPopup] = useState(false);
 //   const [avatarError, setAvatarError] = useState(false);
 //   const [isOwner, setIsOwner] = useState(false);
+  
+  
 
 //   // Récupérer l'utilisateur courant
 //   useEffect(() => {
@@ -113,6 +114,19 @@
 //   // Gérer l'erreur de chargement de l'avatar
 //   const handleAvatarError = () => {
 //     setAvatarError(true);
+//   };
+
+//   // Fonction pour contacter le vendeur
+//   const handleContactSeller = () => {
+//     if (!currentUser) {
+//       setShowPopup(true);
+//       return;
+//     }
+     
+//     // Ici, vous pourriez rediriger vers une page de messagerie ou ouvrir une boîte de dialogue
+//     if (product.seller && product.seller._id) {
+//       navigate(`/messages/${product.seller._id}?productId=${productId}`);
+//     }
 //   };
 
 //   // Fonction pour afficher l'avatar du vendeur de manière sécurisée
@@ -242,9 +256,7 @@
 //                 <div className="px-8 pt-8 pb-2 flex justify-between items-start">
 //                   <div>
 //                     <h1 className="text-3xl font-bold text-neutral-800 mb-2">{product.name}</h1>
-//                     <p className="text-neutral-500 text-sm font-medium">
-//                       Réf: {product._id?.substring(0, 8) || "N/A"}
-//                     </p>
+                    
 //                   </div>
 //                   <button
 //                     onClick={toggleFavorite}
@@ -372,13 +384,26 @@
 //                 )}
 
 //                 {/* Vendeur */}
-//                 <div className="mt-6 mx-8 flex items-center p-4 bg-amber-50 rounded-xl border border-amber-100">
-//                   {product.seller && renderSellerAvatar()}
-//                   <div className="ml-3">
-//                     <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
-//                     <p className="font-medium text-neutral-800">
-//                       {product.seller?.name || "Vendeur inconnu"}
-//                     </p>
+//                 <div className="mt-6 mx-8">
+//                   <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-100">
+//                     <div className="flex items-center">
+//                       {product.seller && renderSellerAvatar()}
+//                       <div className="ml-3">
+//                         <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
+//                         <p className="font-medium text-neutral-800">
+//                           {product.seller?.name || "Vendeur inconnu"}
+//                         </p>
+//                       </div>
+//                     </div>
+//                     {!isOwner && product.seller && (
+//                       <button
+//                         onClick={handleContactSeller}
+//                         className="px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors flex items-center shadow-sm"
+//                       >
+//                         <FiMessageCircle className="mr-2" />
+//                         Contacter le vendeur
+//                       </button>
+//                     )}
 //                   </div>
 //                 </div>
 
@@ -415,6 +440,10 @@
 //                     </button>
 //                   )}
 //                 </div>
+
+
+              
+ 
 //               </div>
 //             </div>
 //           </div>
@@ -436,6 +465,8 @@
 // };
 
 // export default ProductDetail;
+
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchProducts, fetchUser, deleteProduct } from "../../utils/api";
@@ -443,6 +474,10 @@ import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2, FiMessageCircle } from "react-
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import ProductComments from "./ProductComments";
 import Popup from "../Popup/Popup";
+import { useCart } from "../../components/cart/Cart";
+import axios from "axios";
+
+ 
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -458,6 +493,18 @@ const ProductDetail = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+
+  const cartContext = useCart();
+  
+  if (!cartContext) {
+    console.error("❌ useCart() est `undefined`. Assurez-vous d'envelopper votre application avec `<CartProvider>`.");
+  }
+  
+  const { addToCart: contextAddToCart, removeFromCart: contextRemoveFromCart, cart } = cartContext || { 
+    cart: [], 
+    addToCart: () => {}, 
+    removeFromCart: () => {} 
+  };
 
   // Récupérer l'utilisateur courant
   useEffect(() => {
@@ -505,6 +552,41 @@ const ProductDetail = () => {
     getProductData();
   }, [productId, currentUser]);
 
+  // Vérifier si le produit est dans les favoris et dans le panier
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await axios.get("http://localhost:8000/api/v2/favorites", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.data.success && response.data.data) {
+          const favoriteIds = response.data.data
+            .filter(fav => fav && fav.product)
+            .map(fav => fav.product._id);
+          
+          // Mettre à jour l'état isFavorite si le produit est dans les favoris
+          setIsFavorite(favoriteIds.includes(productId));
+        }
+      } catch (error) {
+        console.error("❌ Erreur lors du chargement des favoris:", error.response?.data || error);
+      }
+    };
+
+    loadFavorites();
+    
+    // Vérifier si le produit est dans le panier
+    if (cart && cart.length > 0 && productId) {
+      const isProductInCart = cart.some(item => item.product?._id === productId);
+      setInCart(isProductInCart);
+    }
+  }, [productId, cart]);
+
   // Fonction utilitaire pour construire l'URL de l'image
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) return "";
@@ -515,25 +597,64 @@ const ProductDetail = () => {
   };
 
   // Gérer l'ajout aux favoris
-  const toggleFavorite = () => {
+  const toggleFavorite = async () => {
     if (!currentUser) {
       setShowPopup(true);
       return;
     }
 
-    setIsFavorite(!isFavorite);
-    // Ici, vous pourriez appeler une fonction API pour sauvegarder dans la BD
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("❌ Aucun token trouvé !");
+        return;
+      }
+
+      if (isFavorite) {
+        // Supprimer des favoris
+        await axios.delete(`http://localhost:8000/api/v2/favorites/${productId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setIsFavorite(false);
+        console.log("✅ Produit retiré des favoris");
+      } else {
+        // Ajouter aux favoris
+        await axios.post("http://localhost:8000/api/v2/favorites",
+          { productId },
+          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        );
+
+        setIsFavorite(true);
+        console.log("✅ Produit ajouté aux favoris");
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors de la gestion des favoris :", error.response?.data || error);
+    }
   };
 
   // Gérer l'ajout au panier
-  const toggleCart = () => {
+  const toggleCart = async () => {
     if (!currentUser) {
       setShowPopup(true);
       return;
     }
 
-    setInCart(!inCart);
-    // Ici, vous pourriez appeler une fonction API pour sauvegarder dans la BD
+    try {
+      const cartItem = cart.find(item => item.product?._id === productId);
+      
+      if (cartItem) {
+        await contextRemoveFromCart(cartItem._id);
+        setInCart(false);
+        console.log("✅ Produit retiré du panier");
+      } else {
+        await contextAddToCart(productId, 1);
+        setInCart(true);
+        console.log("✅ Produit ajouté au panier");
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors de l'ajout/suppression du panier", error);
+    }
   };
 
   // Fermer le popup
@@ -552,17 +673,30 @@ const ProductDetail = () => {
   };
 
   // Fonction pour contacter le vendeur
-  const handleContactSeller = () => {
+  const handleContactSeller = async () => {
     if (!currentUser) {
       setShowPopup(true);
       return;
     }
-    
-    // Ici, vous pourriez rediriger vers une page de messagerie ou ouvrir une boîte de dialogue
-    if (product.seller && product.seller._id) {
-      navigate(`/messages/${product.seller._id}?productId=${productId}`);
+  
+    try {
+      // Appeler l'API pour démarrer ou récupérer une conversation
+      const response = await axios.post(
+        "http://localhost:8000/api/v2/conversations/start", // Modification de l'URL
+        { receiverId: product.seller._id },
+        { withCredentials: true }
+      );
+  
+      const conversationId = response.data.conversationId;
+  
+      // Rediriger vers la page de conversation
+      navigate(`/messages/${conversationId}`);
+    } catch (error) {
+      console.error("❌ Erreur lors de la création de la conversation :", error);
     }
   };
+  
+  
 
   // Fonction pour afficher l'avatar du vendeur de manière sécurisée
   const renderSellerAvatar = () => {
@@ -702,7 +836,7 @@ const ProductDetail = () => {
                       size={24}
                       className={`transition duration-300 ${
                         isFavorite 
-                          ? 'text-red-500 fill-red-500' 
+                          ? 'text-red-800 fill-red-800' 
                           : 'text-neutral-400 group-hover:text-red-500'
                       }`}
                     />
@@ -870,8 +1004,11 @@ const ProductDetail = () => {
                           : 'bg-amber-500 hover:bg-amber-600 text-white'
                       }`}
                     >
-                      <HiOutlineShoppingBag size={22} className="mr-2" />
-                      {inCart ? 'Retiré du panier' : 'Ajouter au panier'}
+                      <HiOutlineShoppingBag 
+                        size={22} 
+                        className="mr-2"
+                      />
+                      {inCart ? 'Retirer du panier' : 'Ajouter au panier'}
                     </button>
                   )}
                 </div>

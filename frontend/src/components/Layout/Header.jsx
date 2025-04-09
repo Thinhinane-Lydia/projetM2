@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BiSearchAlt2 } from "react-icons/bi";
-import { HiOutlineShoppingBag } from "react-icons/hi";
+import { HiOutlineShoppingCart } from "react-icons/hi";
 import { RiHeartLine, RiMessage3Line, RiLogoutBoxLine } from "react-icons/ri";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { MdOutlineSell, MdOutlineAccountCircle, MdAdminPanelSettings } from "react-icons/md";
@@ -251,7 +251,7 @@ const Header = ({ setSearchTerm, setActiveCategory, activeCategory, setIsVisible
             onClick={(e) => handleProtectedClick(e, "/favorites")} 
           />
           <IconButton 
-            icon={<HiOutlineShoppingBag size={20} />} 
+            icon={<HiOutlineShoppingCart size={20} />} 
             href="/cart" 
             onClick={(e) => handleProtectedClick(e, "/cart")} 
           />

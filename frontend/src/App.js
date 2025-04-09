@@ -4,6 +4,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { CartProvider } from "./components/cart/Cart";
+import CheckoutPage from './pages/CheckoutPage';
+import OrderConfirmationPage from './pages/OrderConfirmation'; 
+
 
 import PrivateRoute from "./components/PrivateRoute";
  
@@ -20,7 +23,8 @@ import {
   AdminPage,
   FavoritesPage,
   CartPage ,
-  MessagesPage 
+  MessagesPage,
+  
 } from "./Routes";
 
  
@@ -55,6 +59,10 @@ const App = () => {
         <Route path="/Admin" element={<AdminPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
+       
+        <Route path="/OrderConfirmation" element={<OrderConfirmationPage />} />
+      
         <Route 
   path="/messages/*" 
   element={<PrivateRoute><MessagesPage /></PrivateRoute>}

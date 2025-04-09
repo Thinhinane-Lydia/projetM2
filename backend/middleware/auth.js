@@ -5,7 +5,8 @@ const User = require("../model/user");
 
 
 exports.isAuthenticated = catchAsyncError(async (req, res, next) => {
-    const token = req.cookies.token; // ✅ Récupère le token via les cookies
+    // Chercher le token dans les cookies OU dans l'en-tête Authorization
+    let token = req.cookies.token || req.header("Authorization");
 
     if (!token) {
         return res.status(401).json({ success: false, message: "⛔ Accès refusé. Aucun token reçu." });
@@ -15,6 +16,7 @@ exports.isAuthenticated = catchAsyncError(async (req, res, next) => {
     if (token.startsWith("Bearer ")) {
         token = token.split(" ")[1];
     }
+    
 
     console.log("🚀 Token après nettoyage :", token);
 

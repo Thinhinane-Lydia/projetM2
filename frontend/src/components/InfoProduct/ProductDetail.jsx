@@ -1,16 +1,20 @@
 
-
 // import React, { useState, useEffect } from "react";
-// import { useParams, useNavigate } from "react-router-dom";
+// import { useParams, useNavigate, useLocation } from "react-router-dom";
 // import { fetchProducts, fetchUser, deleteProduct } from "../../utils/api";
-// import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
+// import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2, FiMessageCircle, FiShield } from "react-icons/fi";
 // import { HiOutlineShoppingBag } from "react-icons/hi";
 // import ProductComments from "./ProductComments";
 // import Popup from "../Popup/Popup";
+// import { toast } from "react-toastify";
 
 // const ProductDetail = () => {
 //   const { productId } = useParams();
 //   const navigate = useNavigate();
+//   const location = useLocation();
+  
+//   // Vérifier si on est en mode admin avec le paramètre d'URL
+//   const isAdminMode = new URLSearchParams(location.search).get('isAdmin') === 'true';
 
 //   const [product, setProduct] = useState(null);
 //   const [loading, setLoading] = useState(true);
@@ -22,6 +26,7 @@
 //   const [showPopup, setShowPopup] = useState(false);
 //   const [avatarError, setAvatarError] = useState(false);
 //   const [isOwner, setIsOwner] = useState(false);
+//   const [isAdmin, setIsAdmin] = useState(false);
 
 //   // Récupérer l'utilisateur courant
 //   useEffect(() => {
@@ -30,6 +35,7 @@
 //         const userData = await fetchUser();
 //         if (userData.success) {
 //           setCurrentUser(userData.user);
+//           setIsAdmin(userData.user.role === 'admin');
 //         }
 //       } catch (err) {
 //         console.error("Erreur lors de la récupération de l'utilisateur courant:", err);
@@ -115,6 +121,19 @@
 //     setAvatarError(true);
 //   };
 
+//   // Fonction pour contacter le vendeur
+//   const handleContactSeller = () => {
+//     if (!currentUser) {
+//       setShowPopup(true);
+//       return;
+//     }
+    
+//     // Ici, vous pourriez rediriger vers une page de messagerie ou ouvrir une boîte de dialogue
+//     if (product.seller && product.seller._id) {
+//       navigate(`/messages/${product.seller._id}?productId=${productId}`);
+//     }
+//   };
+
 //   // Fonction pour afficher l'avatar du vendeur de manière sécurisée
 //   const renderSellerAvatar = () => {
 //     // Vérifie si le vendeur existe
@@ -177,9 +196,10 @@
 
 //     const response = await deleteProduct(productId);
 //     if (response.success) {
-//       navigate("/Profil"); // Redirige vers la page de la boutique
+//       toast.success("Produit supprimé avec succès");
+//       navigate(isAdminMode ? "/Admin" : "/Profil"); // Redirige vers la page appropriée
 //     } else {
-//       alert("Erreur lors de la suppression du produit !");
+//       toast.error(response?.message || "Erreur lors de la suppression");
 //     }
 //   };
 
@@ -227,39 +247,49 @@
 //             className="flex items-center text-amber-700 hover:text-amber-900 transition font-medium group"
 //           >
 //             <FiArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform" /> 
-//             Retour aux produits
+//             Retour {isAdminMode ? "à l'administration" : "aux produits"}
 //           </button>
 //         </div>
 
-//         {/* Nouvelle mise en page: deux colonnes côte à côte pour le produit et les commentaires */}
-//         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-//           {/* Colonne principale: infos produit (occupe 2/3 sur grand écran) */}
-//           <div className="lg:col-span-2">
+//         {/* Badge Mode Admin */}
+//         {isAdminMode && (
+//           <div className="mb-5 inline-flex items-center bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-sm">
+//             <FiShield className="w-4 h-4 mr-1.5" />
+//             Mode Administrateur
+//           </div>
+//         )}
+
+//         {/* Mise en page adaptée selon le mode */}
+//         <div className={`grid grid-cols-1 ${isAdminMode ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-8`}>
+//           {/* Colonne principale: infos produit */}
+//           <div className={isAdminMode ? "w-full" : "lg:col-span-2"}>
 //             <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full">
 //               {/* Section principale - Photos et infos produit */}
 //               <div className="md:flex flex-col">
-//                 {/* En-tête avec titre et bouton favoris */}
+//                 {/* En-tête avec titre et bouton favoris (uniquement en mode normal) */}
 //                 <div className="px-8 pt-8 pb-2 flex justify-between items-start">
 //                   <div>
 //                     <h1 className="text-3xl font-bold text-neutral-800 mb-2">{product.name}</h1>
 //                     <p className="text-neutral-500 text-sm font-medium">
-//                       Réf: {product._id?.substring(0, 8) || "N/A"}
+//                       ID: {product._id}
 //                     </p>
 //                   </div>
-//                   <button
-//                     onClick={toggleFavorite}
-//                     className="p-3 rounded-full hover:bg-neutral-100 transition-all duration-200 group"
-//                     aria-label="Ajouter aux favoris"
-//                   >
-//                     <FiHeart
-//                       size={24}
-//                       className={`transition duration-300 ${
-//                         isFavorite 
-//                           ? 'text-red-500 fill-red-500' 
-//                           : 'text-neutral-400 group-hover:text-red-500'
-//                       }`}
-//                     />
-//                   </button>
+//                   {!isAdminMode && (
+//                     <button
+//                       onClick={toggleFavorite}
+//                       className="p-3 rounded-full hover:bg-neutral-100 transition-all duration-200 group"
+//                       aria-label="Ajouter aux favoris"
+//                     >
+//                       <FiHeart
+//                         size={24}
+//                         className={`transition duration-300 ${
+//                           isFavorite 
+//                             ? 'text-red-500 fill-red-500' 
+//                             : 'text-neutral-400 group-hover:text-red-500'
+//                         }`}
+//                       />
+//                     </button>
+//                   )}
 //                 </div>
 
 //                 {/* Prix */}
@@ -372,19 +402,42 @@
 //                 )}
 
 //                 {/* Vendeur */}
-//                 <div className="mt-6 mx-8 flex items-center p-4 bg-amber-50 rounded-xl border border-amber-100">
-//                   {product.seller && renderSellerAvatar()}
-//                   <div className="ml-3">
-//                     <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
-//                     <p className="font-medium text-neutral-800">
-//                       {product.seller?.name || "Vendeur inconnu"}
-//                     </p>
+//                 <div className="mt-6 mx-8">
+//                   <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-100">
+//                     <div className="flex items-center">
+//                       {product.seller && renderSellerAvatar()}
+//                       <div className="ml-3">
+//                         <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
+//                         <p className="font-medium text-neutral-800">
+//                           {product.seller?.name || "Vendeur inconnu"}
+//                         </p>
+//                       </div>
+//                     </div>
+//                     {!isAdminMode && !isOwner && product.seller && (
+//                       <button
+//                         onClick={handleContactSeller}
+//                         className="px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors flex items-center shadow-sm"
+//                       >
+//                         <FiMessageCircle className="mr-2" />
+//                         Contacter le vendeur
+//                       </button>
+//                     )}
 //                   </div>
 //                 </div>
 
 //                 {/* Boutons d'action */}
 //                 <div className="mt-8 px-8 pb-8">
-//                   {isOwner ? (
+//                   {isAdminMode ? (
+//                     // Mode admin: uniquement bouton de suppression
+//                     <button
+//                       onClick={handleDelete}
+//                       className="w-full py-3.5 px-4 rounded-xl flex items-center justify-center bg-red-600 hover:bg-red-700 text-white transition-colors shadow-md hover:shadow-lg"
+//                     >
+//                       <FiTrash2 className="mr-2" />
+//                       Supprimer ce produit
+//                     </button>
+//                   ) : isOwner ? (
+//                     // Mode propriétaire: modifier et supprimer
 //                     <div className="flex space-x-4">
 //                       <button
 //                         onClick={handleEdit}
@@ -402,6 +455,7 @@
 //                       </button>
 //                     </div>
 //                   ) : (
+//                     // Mode client: ajouter au panier
 //                     <button
 //                       onClick={toggleCart}
 //                       className={`w-full py-4 px-6 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
@@ -419,16 +473,18 @@
 //             </div>
 //           </div>
 
-//           {/* Colonne des commentaires (occupe 1/3 sur grand écran) */}
-//           <div className="lg:col-span-1">
-//             <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full p-6">
-//               <h2 className="text-xl font-bold text-neutral-800 mb-6 flex items-center">
-//                 <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-//                 Avis & Commentaires
-//               </h2>
-//               <ProductComments productId={productId} />
+//           {/* Colonne des commentaires (uniquement en mode normal) */}
+//           {!isAdminMode && (
+//             <div className="lg:col-span-1">
+//               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full p-6">
+//                 <h2 className="text-xl font-bold text-neutral-800 mb-6 flex items-center">
+//                   <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
+//                   Avis & Commentaires
+//                 </h2>
+//                 <ProductComments productId={productId} />
+//               </div>
 //             </div>
-//           </div>
+//           )}
 //         </div>
 //       </div>
 //     </div>
@@ -436,17 +492,30 @@
 // };
 
 // export default ProductDetail;
+
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchProducts, fetchUser, deleteProduct } from "../../utils/api";
-import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2, FiMessageCircle } from "react-icons/fi";
+import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2, FiMessageCircle, FiShield, FiX } from "react-icons/fi";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import ProductComments from "./ProductComments";
 import Popup from "../Popup/Popup";
+import { toast } from "react-toastify";
 
-const ProductDetail = () => {
-  const { productId } = useParams();
+// Mode popup = true pour les admins qui voient le composant comme popup
+// Mode popup = false pour la page normale InfoProduct
+const ProductDetail = ({ 
+  productId: propProductId, 
+  isPopup = false, 
+  onClose = null,
+  onProductDeleted = null
+}) => {
+  // Récupérer productId soit depuis les props (mode popup) soit depuis l'URL (mode page)
+  const { productId: paramProductId } = useParams();
+  const productId = propProductId || paramProductId;
+  
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -458,6 +527,7 @@ const ProductDetail = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Récupérer l'utilisateur courant
   useEffect(() => {
@@ -466,6 +536,7 @@ const ProductDetail = () => {
         const userData = await fetchUser();
         if (userData.success) {
           setCurrentUser(userData.user);
+          setIsAdmin(userData.user.role === 'admin');
         }
       } catch (err) {
         console.error("Erreur lors de la récupération de l'utilisateur courant:", err);
@@ -624,11 +695,29 @@ const ProductDetail = () => {
   const handleDelete = async () => {
     if (!window.confirm("Voulez-vous vraiment supprimer ce produit ?")) return;
 
-    const response = await deleteProduct(productId);
-    if (response.success) {
-      navigate("/Profil"); // Redirige vers la page de la boutique
-    } else {
-      alert("Erreur lors de la suppression du produit !");
+    try {
+      const response = await deleteProduct(productId);
+      if (response.success) {
+        toast.success("Produit supprimé avec succès");
+        
+        // Si c'est en mode popup, informer le parent et fermer
+        if (isPopup) {
+          if (onProductDeleted) {
+            onProductDeleted(productId);
+          }
+          if (onClose) {
+            onClose();
+          }
+        } else {
+          // Sinon, rediriger vers la page appropriée
+          navigate(isAdmin ? "/Admin" : "/Profil");
+        }
+      } else {
+        toast.error(response?.message || "Erreur lors de la suppression");
+      }
+    } catch (err) {
+      console.error("Erreur lors de la suppression:", err);
+      toast.error("Une erreur est survenue lors de la suppression");
     }
   };
 
@@ -638,7 +727,15 @@ const ProductDetail = () => {
   };
 
   if (loading) {
-    return (
+    return isPopup ? (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-amber-500"></div>
+          </div>
+        </div>
+      </div>
+    ) : (
       <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-amber-500"></div>
       </div>
@@ -646,6 +743,25 @@ const ProductDetail = () => {
   }
 
   if (error || !product) {
+    if (isPopup) {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-red-600">Erreur</h2>
+              <button 
+                onClick={onClose} 
+                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            <p className="text-center text-gray-700 my-6">{error || "Produit non trouvé"}</p>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-neutral-50">
         <div className="text-xl text-neutral-700 mb-4 font-light">{error || "Produit non trouvé"}</div>
@@ -655,6 +771,243 @@ const ProductDetail = () => {
         >
           <FiArrowLeft className="mr-2" /> Retour aux produits
         </button>
+      </div>
+    );
+  }
+
+  // Contenu principal du détail produit qui sera utilisé dans les deux modes
+  const productContent = (
+    <>
+      {/* Titre et ID du produit */}
+      <div className={`px-${isPopup ? '4' : '8'} pt-${isPopup ? '2' : '8'} pb-2 flex justify-between items-start`}>
+        <div>
+          <h1 className={`text-${isPopup ? '2xl' : '3xl'} font-bold text-neutral-800 mb-${isPopup ? '1' : '2'}`}>{product.name}</h1>
+          <p className="text-neutral-500 text-sm font-medium">
+            ID: {product._id}
+          </p>
+        </div>
+        {!isPopup && (
+          <button
+            onClick={toggleFavorite}
+            className="p-3 rounded-full hover:bg-neutral-100 transition-all duration-200 group"
+            aria-label="Ajouter aux favoris"
+          >
+            <FiHeart
+              size={24}
+              className={`transition duration-300 ${
+                isFavorite 
+                  ? 'text-red-500 fill-red-500' 
+                  : 'text-neutral-400 group-hover:text-red-500'
+              }`}
+            />
+          </button>
+        )}
+      </div>
+
+      {/* Prix */}
+      <div className={`px-${isPopup ? '4' : '8'} mb-${isPopup ? '4' : '6'}`}>
+        <p className={`text-${isPopup ? '2xl' : '3xl'} font-bold text-amber-600`}>{product.price} DA</p>
+        {product.oldPrice && (
+          <p className="text-neutral-500 line-through text-sm mt-1">
+            {product.oldPrice} DA
+          </p>
+        )}
+      </div>
+
+      {/* Galerie d'images */}
+      <div className={`px-${isPopup ? '4' : '6 md:px-8'}`}>
+        <div className={`relative h-${isPopup ? '64' : '80 md:h-96'} bg-neutral-50 rounded-xl overflow-hidden mb-4 flex items-center justify-center`}>
+          {product.images && product.images.length > 0 ? (
+            <img
+              src={getImageUrl(product.images[currentImage]?.url)}
+              alt={product.name}
+              className="h-full object-contain transition duration-300 ease-in-out"
+            />
+          ) : (
+            <div className="text-neutral-400">Aucune image disponible</div>
+          )}
+        </div>
+
+        {/* Miniatures avec animation et effet hover */}
+        {product.images && product.images.length > 1 && (
+          <div className="flex overflow-x-auto gap-3 py-2 scrollbar-thin scrollbar-thumb-amber-200 pb-4">
+            {product.images.map((img, idx) => (
+              <div
+                key={idx}
+                className={`relative w-${isPopup ? '16' : '20'} h-${isPopup ? '16' : '20'} flex-shrink-0 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 ${
+                  currentImage === idx 
+                    ? 'ring-2 ring-amber-500 shadow-md transform scale-105' 
+                    : 'opacity-80 hover:opacity-100'
+                }`}
+                onClick={() => handleImageChange(idx)}
+              >
+                <img
+                  src={getImageUrl(img.url)}
+                  alt={`Miniature ${idx + 1}`}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Caractéristiques du produit */}
+      <div className={`mt-${isPopup ? '6' : '8'} px-${isPopup ? '4' : '8'}`}>
+        <h2 className={`text-lg font-semibold text-neutral-700 mb-${isPopup ? '2' : '4'} flex items-center`}>
+          <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
+          Caractéristiques
+        </h2>
+        <div className={`grid grid-cols-1 ${isPopup ? 'sm:grid-cols-2' : 'md:grid-cols-2'} gap-${isPopup ? '2' : '4'} bg-neutral-50 rounded-xl p-${isPopup ? '4' : '5'}`}>
+          {product.category && (
+            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
+              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Catégorie</p>
+              <p className="font-medium text-neutral-700">{product.category.name || "Non spécifié"}</p>
+            </div>
+          )}
+          {product.subCategory && (
+            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
+              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Sous-catégorie</p>
+              <p className="font-medium text-neutral-700">{product.subCategory.name || "Non spécifié"}</p>
+            </div>
+          )}
+          {product.size && (
+            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
+              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Taille</p>
+              <p className="font-medium text-neutral-700">{product.size.name}</p>
+            </div>
+          )}
+          {product.brand && (
+            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
+              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Marque</p>
+              <p className="font-medium text-neutral-700">{product.brand}</p>
+            </div>
+          )}
+          {product.color && (
+            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
+              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Couleur</p>
+              <p className="font-medium text-neutral-700">{product.color}</p>
+            </div>
+          )}
+          {product.condition && (
+            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
+              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">État</p>
+              <p className="font-medium text-neutral-700">{product.condition}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Description */}
+      {product.description && (
+        <div className={`mt-6 px-${isPopup ? '4' : '8'}`}>
+          <h2 className={`text-lg font-semibold text-neutral-700 mb-${isPopup ? '2' : '3'} flex items-center`}>
+            <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
+            Description
+          </h2>
+          <div className={`bg-white p-${isPopup ? '3' : '4'} rounded-xl border border-neutral-200`}>
+            <p className="text-neutral-600 leading-relaxed">{product.description}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Vendeur */}
+      <div className={`mt-6 ${isPopup ? 'px-4' : 'mx-8'}`}>
+        <div className={`flex items-center ${!isPopup && !isOwner && product.seller ? 'justify-between' : ''} p-${isPopup ? '3' : '4'} bg-amber-50 rounded-xl border border-amber-100`}>
+          <div className="flex items-center">
+            {product.seller && renderSellerAvatar()}
+            <div className="ml-3">
+              <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
+              <p className="font-medium text-neutral-800">
+                {product.seller?.name || "Vendeur inconnu"}
+              </p>
+            </div>
+          </div>
+          {!isPopup && !isOwner && product.seller && (
+            <button
+              onClick={handleContactSeller}
+              className="px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors flex items-center shadow-sm"
+            >
+              <FiMessageCircle className="mr-2" />
+              Contacter le vendeur
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Boutons d'action */}
+      <div className={`mt-${isPopup ? '6' : '8'} px-${isPopup ? '4' : '8'} pb-${isPopup ? '4' : '8'}`}>
+        {isPopup ? (
+          // Mode popup (admin): uniquement bouton de suppression
+          <button
+            onClick={handleDelete}
+            className="w-full py-3 px-4 rounded-xl flex items-center justify-center bg-red-600 hover:bg-red-700 text-white transition-colors shadow-md hover:shadow-lg"
+          >
+            <FiTrash2 className="mr-2" />
+            Supprimer ce produit
+          </button>
+        ) : isOwner ? (
+          // Mode propriétaire: modifier et supprimer
+          <div className="flex space-x-4">
+            <button
+              onClick={handleEdit}
+              className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-md hover:shadow-lg"
+            >
+              <FiEdit2 className="mr-2" />
+              Modifier
+            </button>
+            <button
+              onClick={handleDelete}
+              className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-neutral-700 hover:bg-neutral-800 text-white transition-colors shadow-md hover:shadow-lg"
+            >
+              <FiTrash2 className="mr-2" />
+              Supprimer
+            </button>
+          </div>
+        ) : (
+          // Mode client: ajouter au panier
+          <button
+            onClick={toggleCart}
+            className={`w-full py-4 px-6 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
+              inCart
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-amber-500 hover:bg-amber-600 text-white'
+            }`}
+          >
+            <HiOutlineShoppingBag size={22} className="mr-2" />
+            {inCart ? 'Retiré du panier' : 'Ajouter au panier'}
+          </button>
+        )}
+      </div>
+    </>
+  );
+
+  // Affichage différent selon le mode (popup ou page)
+  if (isPopup) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
+          {/* En-tête avec bouton de fermeture */}
+          <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+            <div className="flex items-center">
+              <h2 className="text-xl font-bold text-neutral-800">Détails du produit</h2>
+              <div className="ml-3 flex items-center bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">
+                <FiShield className="w-3 h-3 mr-1" />
+                Mode Admin
+              </div>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              <FiX size={24} />
+            </button>
+          </div>
+
+          <div className="p-6">
+            {productContent}
+          </div>
+        </div>
       </div>
     );
   }
@@ -680,215 +1033,38 @@ const ProductDetail = () => {
           </button>
         </div>
 
-        {/* Nouvelle mise en page: deux colonnes côte à côte pour le produit et les commentaires */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Colonne principale: infos produit (occupe 2/3 sur grand écran) */}
-          <div className="lg:col-span-2">
+        {/* Badge Mode Admin si admin */}
+        {isAdmin && (
+          <div className="mb-5 inline-flex items-center bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-sm">
+            <FiShield className="w-4 h-4 mr-1.5" />
+            Mode Administrateur
+          </div>
+        )}
+
+        {/* Mise en page adaptée selon le mode */}
+        <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-8`}>
+          {/* Colonne principale: infos produit */}
+          <div className={isAdmin ? "w-full" : "lg:col-span-2"}>
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full">
               {/* Section principale - Photos et infos produit */}
               <div className="md:flex flex-col">
-                {/* En-tête avec titre et bouton favoris */}
-                <div className="px-8 pt-8 pb-2 flex justify-between items-start">
-                  <div>
-                    <h1 className="text-3xl font-bold text-neutral-800 mb-2">{product.name}</h1>
-                    
-                  </div>
-                  <button
-                    onClick={toggleFavorite}
-                    className="p-3 rounded-full hover:bg-neutral-100 transition-all duration-200 group"
-                    aria-label="Ajouter aux favoris"
-                  >
-                    <FiHeart
-                      size={24}
-                      className={`transition duration-300 ${
-                        isFavorite 
-                          ? 'text-red-500 fill-red-500' 
-                          : 'text-neutral-400 group-hover:text-red-500'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {/* Prix */}
-                <div className="px-8 mb-6">
-                  <p className="text-3xl font-bold text-amber-600">{product.price} DA</p>
-                  {product.oldPrice && (
-                    <p className="text-neutral-500 line-through text-sm mt-1">
-                      {product.oldPrice} DA
-                    </p>
-                  )}
-                </div>
-
-                {/* Galerie d'images */}
-                <div className="px-6 md:px-8">
-                  <div className="relative h-80 md:h-96 bg-neutral-50 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
-                    {product.images && product.images.length > 0 ? (
-                      <img
-                        src={getImageUrl(product.images[currentImage]?.url)}
-                        alt={product.name}
-                        className="w-full h-full object-contain transition duration-300 ease-in-out"
-                      />
-                    ) : (
-                      <div className="text-neutral-400">Aucune image disponible</div>
-                    )}
-                  </div>
-
-                  {/* Miniatures avec animation et effet hover */}
-                  {product.images && product.images.length > 1 && (
-                    <div className="flex overflow-x-auto gap-3 py-2 scrollbar-thin scrollbar-thumb-amber-200 pb-4">
-                      {product.images.map((img, idx) => (
-                        <div
-                          key={idx}
-                          className={`relative w-20 h-20 flex-shrink-0 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 ${
-                            currentImage === idx 
-                              ? 'ring-2 ring-amber-500 shadow-md transform scale-105' 
-                              : 'opacity-80 hover:opacity-100'
-                          }`}
-                          onClick={() => handleImageChange(idx)}
-                        >
-                          <img
-                            src={getImageUrl(img.url)}
-                            alt={`Miniature ${idx + 1}`}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Caractéristiques du produit */}
-                <div className="mt-8 px-8">
-                  <h2 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
-                    <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-                    Caractéristiques
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-neutral-50 rounded-xl p-5">
-                    <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-                      <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Catégorie</p>
-                      <p className="font-medium text-neutral-700">{product.category?.name || "Non spécifié"}</p>
-                    </div>
-                    <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-                      <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Sous-catégorie</p>
-                      <p className="font-medium text-neutral-700">{product.subCategory?.name || "Non spécifié"}</p>
-                    </div>
-                    {product.size && (
-                      <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-                        <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Taille</p>
-                        <p className="font-medium text-neutral-700">{product.size.name}</p>
-                      </div>
-                    )}
-                    {product.brand && (
-                      <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-                        <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Marque</p>
-                        <p className="font-medium text-neutral-700">{product.brand}</p>
-                      </div>
-                    )}
-                    {product.material && (
-                      <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-                        <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Matériau</p>
-                        <p className="font-medium text-neutral-700">{product.material}</p>
-                      </div>
-                    )}
-                    {product.color && (
-                      <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-                        <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Couleur</p>
-                        <p className="font-medium text-neutral-700">{product.color}</p>
-                      </div>
-                    )}
-                    {product.condition && (
-                      <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-                        <p className="text-xs text-amber-600 uppercase font-semibold mb-1">État</p>
-                        <p className="font-medium text-neutral-700">{product.condition}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Description */}
-                {product.description && (
-                  <div className="mt-6 px-8">
-                    <h2 className="text-lg font-semibold text-neutral-700 mb-3 flex items-center">
-                      <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-                      Description
-                    </h2>
-                    <div className="bg-white p-4 rounded-xl border border-neutral-200">
-                      <p className="text-neutral-600 leading-relaxed">{product.description}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Vendeur */}
-                <div className="mt-6 mx-8">
-                  <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-100">
-                    <div className="flex items-center">
-                      {product.seller && renderSellerAvatar()}
-                      <div className="ml-3">
-                        <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
-                        <p className="font-medium text-neutral-800">
-                          {product.seller?.name || "Vendeur inconnu"}
-                        </p>
-                      </div>
-                    </div>
-                    {!isOwner && product.seller && (
-                      <button
-                        onClick={handleContactSeller}
-                        className="px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors flex items-center shadow-sm"
-                      >
-                        <FiMessageCircle className="mr-2" />
-                        Contacter le vendeur
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Boutons d'action */}
-                <div className="mt-8 px-8 pb-8">
-                  {isOwner ? (
-                    <div className="flex space-x-4">
-                      <button
-                        onClick={handleEdit}
-                        className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-md hover:shadow-lg"
-                      >
-                        <FiEdit2 className="mr-2" />
-                        Modifier
-                      </button>
-                      <button
-                        onClick={handleDelete}
-                        className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-neutral-700 hover:bg-neutral-800 text-white transition-colors shadow-md hover:shadow-lg"
-                      >
-                        <FiTrash2 className="mr-2" />
-                        Supprimer
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={toggleCart}
-                      className={`w-full py-4 px-6 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
-                        inCart
-                          ? 'bg-green-600 hover:bg-green-700 text-white'
-                          : 'bg-amber-500 hover:bg-amber-600 text-white'
-                      }`}
-                    >
-                      <HiOutlineShoppingBag size={22} className="mr-2" />
-                      {inCart ? 'Retiré du panier' : 'Ajouter au panier'}
-                    </button>
-                  )}
-                </div>
+                {productContent}
               </div>
             </div>
           </div>
 
-          {/* Colonne des commentaires (occupe 1/3 sur grand écran) */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full p-6">
-              <h2 className="text-xl font-bold text-neutral-800 mb-6 flex items-center">
-                <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-                Avis & Commentaires
-              </h2>
-              <ProductComments productId={productId} />
+          {/* Colonne des commentaires (uniquement en mode normal) */}
+          {!isAdmin && (
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full p-6">
+                <h2 className="text-xl font-bold text-neutral-800 mb-6 flex items-center">
+                  <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
+                  Avis & Commentaires
+                </h2>
+                <ProductComments productId={productId} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

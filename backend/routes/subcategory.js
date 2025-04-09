@@ -1,17 +1,20 @@
 const express = require("express");
 const { createSubCategory, getSubCategoriesByCategory,updateSubCategory,deleteSubCategory } = require("../controller/subcategory");
-
+const upload = require("../multer");
 const router = express.Router();
 
-// ✅ Ajouter une sous-catégorie avec une image
-router.post("/", createSubCategory);
+
+
 
 // ✅ Récupérer les sous-catégories d'une catégorie
 router.get("/:categoryId", getSubCategoriesByCategory);
 
-// Modifier une sous-catégorie
-router.put("/:id", updateSubCategory);
+
 
 // Supprimer une sous-catégorie
 router.delete("/:id", deleteSubCategory);
+
+
+router.post("/", upload.single("image"), createSubCategory);
+router.put("/:id", upload.single("image"), updateSubCategory);
 module.exports = router;

@@ -128,56 +128,56 @@ exports.getProducts = catchAsyncError(async (req, res, next) => {
 });
 
 // ✅ Supprimer un produit (seulement par son propriétaire)
+// exports.deleteProduct = catchAsyncError(async (req, res, next) => {
+//   const product = await Product.findById(req.params.id);
+
+//   if (!product) {
+//       return next(new ErrorHandler("Produit non trouvé", 404));
+//   }
+
+//   // Vérifie si l'utilisateur connecté est le propriétaire du produit
+//   if (product.seller.toString() !== req.user.id) {
+//       return next(new ErrorHandler("Vous n'avez pas l'autorisation de supprimer ce produit", 403));
+//   }
+
+//   await product.deleteOne();
+//   res.status(200).json({ success: true, message: "Produit supprimé avec succès" });
+// });
+// ✅ Supprimer un produit (par son propriétaire ou un admin)
 exports.deleteProduct = catchAsyncError(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
 
   if (!product) {
-      return next(new ErrorHandler("Produit non trouvé", 404));
+    return next(new ErrorHandler("Produit non trouvé", 404));
   }
 
-  // Vérifie si l'utilisateur connecté est le propriétaire du produit
-  if (product.seller.toString() !== req.user.id) {
-      return next(new ErrorHandler("Vous n'avez pas l'autorisation de supprimer ce produit", 403));
+  // Vérifie si l'utilisateur connecté est le propriétaire du produit OU un administrateur
+  if (product.seller.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(new ErrorHandler("Vous n'avez pas l'autorisation de supprimer ce produit", 403));
   }
 
   await product.deleteOne();
   res.status(200).json({ success: true, message: "Produit supprimé avec succès" });
 });
+// // ✅ Supprimer un produit (par son propriétaire ou un admin)
+// exports.deleteProduct = catchAsyncError(async (req, res, next) => {
+//   const product = await Product.findById(req.params.id);
 
-// ✅ Modifier un produit (seulement par son propriétaire)
-// exports.updateProduct = catchAsyncError(async (req, res, next) => {
-//     const product = await Product.findById(req.params.id);
+//   if (!product) {
+//     return next(new ErrorHandler("Produit non trouvé", 404));
+//   }
 
-//     if (!product) {
-//         return next(new ErrorHandler("Produit non trouvé", 404));
-//     }
+//   // Vérifier si l'utilisateur connecté est le propriétaire du produit ou un administrateur
+//   // On ne va pas le vérifier ici car la vérification sera effectuée au niveau du contrôleur utilisateur
+//   // (lorsque l'utilisateur supprime tous les produits associés).
 
-//     // Vérifie si l'utilisateur connecté est le propriétaire du produit
-//     if (product.seller.toString() !== req.user.id) {
-//         return next(new ErrorHandler("Vous n'avez pas l'autorisation de modifier ce produit", 403));
-//     }
+//   await product.deleteOne();  // Suppression du produit
 
-//     // Mise à jour des champs autorisés
-//     const { name, description, price, category, subCategory, brand, material, size, condition, color } = req.body;
-
-//     if (req.files && req.files.length > 0) {
-//         product.images = req.files.map(file => ({ url: file.path.replace(/\\/g, "/") }));
-//     }
-
-//     product.name = name || product.name;
-//     product.description = description || product.description;
-//     product.price = price || product.price;
-//     product.category = category || product.category;
-//     product.subCategory = subCategory || product.subCategory;
-//     product.brand = brand || product.brand;
-//     product.material = material || product.material;
-//     product.size = size || product.size;
-//     product.condition = condition || product.condition;
-//     product.color = color || product.color;
-
-//     await product.save();
-//     res.status(200).json({ success: true, message: "Produit mis à jour avec succès", product });
+//   console.log(`Produit supprimé : ${product.name}`);
+//   res.status(200).json({ success: true, message: `Produit ${product.name} supprimé avec succès` });
 // });
+
+
 exports.updateProduct = catchAsyncError(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
 

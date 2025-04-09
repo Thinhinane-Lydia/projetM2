@@ -8,6 +8,8 @@ const { isAuthenticated } = require('../middleware/auth');
 // ✅ Récupérer les messages d'une conversation
 router.get('/conversation/:conversationId', isAuthenticated, messageController.getConversationMessages);
 
+
+
 // ✅ Envoyer un message
 router.post("/", isAuthenticated, async (req, res) => {
     try {
@@ -35,7 +37,7 @@ router.post("/", isAuthenticated, async (req, res) => {
         await message.save();
 
         // Peupler les informations du sender
-        const populatedMessage = await Message.findById(message._id).populate("senderId", "username email avatar");
+        const populatedMessage = await Message.findById(message._id).populate("senderId", "name username email avatar") .populate("receiverId", "name username email avatar");
 
         res.status(201).json({ success: true, data: populatedMessage });
     } catch (error) {
@@ -46,5 +48,6 @@ router.post("/", isAuthenticated, async (req, res) => {
 
 // ✅ Supprimer un message
 router.delete('/:messageId', isAuthenticated, messageController.deleteMessageForUser);
+
 
 module.exports = router;

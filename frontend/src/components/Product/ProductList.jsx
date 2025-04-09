@@ -1,279 +1,4 @@
-// <<<<<<< HEAD
 
-// import { FiHeart } from "react-icons/fi";
-// import { fetchProducts, fetchProductRating, fetchCommentsByProduct, sendMessage ,addToCart, removeFromCart } from "../../utils/api";
-// import FilterMenu from "./FilterMenu";
-// import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
-// import { HiOutlineShoppingBag } from "react-icons/hi";
-// import { FaComment, FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
-// import { useCart } from "../../components/cart/Cart";
-// import { useNavigate } from "react-router-dom";
-
-
-// const ProductList = forwardRef(({ searchTerm, activeCategory, activeSubCategory, isVisible }, ref) => {
-//   const [products, setProducts] = useState([]);
-//   const [productsWithRatings, setProductsWithRatings] = useState([]);
-//   const [favorites, setFavorites] = useState([]);
-//   const [cart, setCart] = useState([]);
-//   const [filters, setFilters] = useState({});
-//   const [loading, setLoading] = useState(true);
-//   const [commentCounts, setCommentCounts] = useState({});
-//   const [ratings, setRatings] = useState({});
-//   const cartContext = useCart();
-//   const navigate = useNavigate();
-
-//   if (!cartContext) {
-//     console.error("❌ useCart() est `undefined`. Assurez-vous d'envelopper votre application avec `<CartProvider>`.");
-//   }
-  
-//   const { addToCart, removeFromCart } = cartContext || { cart: [], addToCart: () => {}, removeFromCart: () => {} };
-
-//   // Fonction pour calculer la moyenne des ratings
-//   const calculateAverageRating = (comments) => {
-//     if (!comments || comments.length === 0) return 0;
-    
-//     // Filtrer les commentaires qui ont une note valide (non null/undefined)
-//     const validRatings = comments.filter(comment => 
-//       comment.rating !== null && comment.rating !== undefined && !isNaN(comment.rating)
-//     );
-    
-//     if (validRatings.length === 0) return 0;
-    
-//     const totalRating = validRatings.reduce((acc, comment) => acc + parseFloat(comment.rating), 0);
-//     return totalRating / validRatings.length;
-//   };
-
-//   // Fonction pour charger les produits - extraite pour pouvoir l'appeler depuis d'autres composants
-//   const loadProducts = useCallback(async () => {
-//     setLoading(true);
-//     try {
-//       const data = await fetchProducts();
-//       setProducts(data.products);
-      
-//       // Récupérer le nombre de commentaires et la moyenne des ratings pour chaque produit
-//       const commentsData = {};
-//       const ratingsData = {};
-      
-//       await Promise.all(
-//         data.products.map(async (product) => {
-//           try {
-//             const comments = await fetchCommentsByProduct(product._id);
-//             commentsData[product._id] = comments.length;
-            
-//             // Calculer la moyenne des ratings
-//             ratingsData[product._id] = calculateAverageRating(comments);
-//           } catch (error) {
-//             console.error(`Erreur lors de la récupération des commentaires pour ${product._id}:`, error);
-//             commentsData[product._id] = 0;
-//             ratingsData[product._id] = 0;
-//           }
-//         })
-//       );
-      
-//       setCommentCounts(commentsData);
-//       setRatings(ratingsData);
-      
-//       // Associer les ratings aux produits
-//       const productsWithRatingsData = data.products.map(product => ({
-//         ...product,
-//         rating: ratingsData[product._id] || 0,
-//         ratingCount: commentsData[product._id] || 0
-//       }));
-      
-//       setProductsWithRatings(productsWithRatingsData);
-//     } catch (error) {
-//       console.error("Erreur lors du chargement des produits:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, []);
-
-//   // Exposer la fonction loadProducts via la ref
-//   useImperativeHandle(ref, () => ({
-//     loadProducts
-//   }));
-
-//   // Charger tous les produits au montage du composant
-//   useEffect(() => {
-//     loadProducts();
-//   }, [loadProducts]);
-
-//   // Réinitialiser les filtres quand on change de catégorie
-//   useEffect(() => {
-//     setFilters({});
-//   }, [activeCategory]);
-
-//   const toggleFavorite = (e, productId) => {
-//     e.stopPropagation(); // Empêcher la navigation lors du clic sur le bouton favori
-//     setFavorites((prev) =>
-//       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
-//     );
-//   };
-
-//   const toggleCart = (e, productId) => {
-//     e.stopPropagation(); // Empêcher la navigation lors du clic sur le bouton panier
-//     setCart((prev) =>
-//       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
-//     );
-//   };
-
-//   const applyFilters = (newFilters) => {
-//     setFilters(newFilters);
-//   };
-
-//   // Navigation vers la page de détail du produit
-//   const handleProductClick = (productId) => {
-//     navigate(`/InfoProduct/${productId}`);
-//   };
-
-//   // Filtrer les produits en fonction des critères actifs
-//   const filteredProducts = productsWithRatings.filter((product) => {
-//     // Vérification de base pour les filtres de texte et de catégories
-//     const matchesBasicCriteria = 
-//       (!searchTerm || product.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-//       (!activeCategory || product.category?._id === activeCategory) &&
-//       (!activeSubCategory || product.subCategory?._id === activeSubCategory) &&
-//       (!filters.size || product.size?._id === filters.size) &&
-//       (!filters.brand || product.brand === filters.brand) &&
-//       (!filters.material || product.material === filters.material) &&
-//       (!filters.color || product.color === filters.color) &&
-//       (!filters.condition || product.condition === filters.condition) &&
-//       (!filters.minPrice || product.price >= filters.minPrice) &&
-//       (!filters.maxPrice || product.price <= filters.maxPrice);
-    
-//     // Vérification pour le rating minimal et maximal
-//     const ratingValue = product.rating || 0;
-//     const matchesMinRating = !filters.minRating || ratingValue >= parseFloat(filters.minRating);
-//     const matchesMaxRating = !filters.maxRating || ratingValue <= parseFloat(filters.maxRating);
-    
-//     return matchesBasicCriteria && matchesMinRating && matchesMaxRating;
-//   });
-
-//   // Composant pour afficher les étoiles de rating
-//   const RatingStars = ({ rating }) => {
-//     // S'assurer que le rating est un nombre valide
-//     const ratingValue = parseFloat(rating) || 0;
-    
-//     // Arrondir à la demi-étoile la plus proche
-//     const roundedRating = Math.round(ratingValue * 2) / 2;
-//     const fullStars = Math.floor(roundedRating);
-//     const hasHalfStar = roundedRating % 1 !== 0;
-//     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    
-//     return (
-//       <div className="flex items-center">
-//         {[...Array(fullStars)].map((_, i) => (
-//           <FaStar key={`full-${i}`} className="text-amber-500 text-sm" />
-//         ))}
-//         {hasHalfStar && <FaStarHalfAlt key="half" className="text-amber-500 text-sm" />}
-//         {[...Array(emptyStars)].map((_, i) => (
-//           <FaRegStar key={`empty-${i}`} className="text-amber-300 text-sm" />
-//         ))}
-//       </div>
-//     );
-//   };
-
-//   // Modifier les couleurs pour utiliser des tons de ambre/jaune et des neutres
-//   const getProductColor = (productId) => {
-//     const bgColors = [
-//       "bg-amber-50", "bg-yellow-50", "bg-neutral-50", "bg-amber-100",
-//       "bg-yellow-100", "bg-orange-50", "bg-neutral-100", "bg-yellow-50"
-//     ];
-//     const borderColors = [
-//       "border-amber-300", "border-yellow-300", "border-amber-200", "border-yellow-200",
-//       "border-amber-300", "border-yellow-300", "border-amber-200", "border-neutral-300"
-//     ];
-
-//     // Utilise l'ID du produit pour obtenir un index cohérent
-//     const index = productId.charCodeAt(0) % bgColors.length;
-
-//     return {
-//       bg: bgColors[index],
-//       border: borderColors[index]
-// =======
-
-    
-//     const [filters, setFilters] = useState({});
-
-//     useEffect(() => {
-//         const getProducts = async () => {
-//             const data = await fetchProducts();
-//             setProducts(data.products);
-//         };
-//         getProducts();
-
-//         // Charger les favoris existants
-//         const loadFavorites = async () => {
-//             try {
-//                 const token = localStorage.getItem("token");
-//                 if (!token) return;
-        
-//                 const response = await axios.get("http://localhost:8000/api/v2/favorites", {
-//                     headers: {
-//                         Authorization: `Bearer ${token}`
-//                     }
-//                 });
-        
-//                 if (response.data.success && response.data.data) {
-//                     // Vérifiez que chaque favori et sa propriété product existent avant d'accéder à _id
-//                     const favoriteIds = response.data.data
-//                         .filter(fav => fav && fav.product) // Filtrer les objets null ou sans produit
-//                         .map(fav => fav.product._id);
-//                     setFavorites(favoriteIds);
-//                 }
-//             } catch (error) {
-//                 console.error("❌ Erreur lors du chargement des favoris:", error.response?.data || error);
-//             }
-//         };
-
-//         loadFavorites();
-//     }, []);
-
-//     const toggleFavorite = async (productId) => {
-//         try {
-//             const token = localStorage.getItem("token");
-//             if (!token) {
-//                 console.error("❌ Aucun token trouvé !");
-//                 return;
-//             }
-
-//             if (favorites.includes(productId)) {
-//                 // Supprimer des favoris
-//                 await axios.delete(`http://localhost:8000/api/v2/favorites/${productId}`, {
-//                     headers: { Authorization: `Bearer ${token}` }
-//                 });
-
-//                 setFavorites(prev => prev.filter(id => id !== productId));
-//                 console.log("✅ Produit retiré des favoris");
-//             } else {
-//                 // Ajouter aux favoris
-//                 await axios.post("http://localhost:8000/api/v2/favorites",
-//                     { productId },
-//                     { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
-//                 );
-
-//                 setFavorites(prev => [...prev, productId]);
-//                 console.log("✅ Produit ajouté aux favoris");
-//             }
-//         } catch (error) {
-//             console.error("❌ Erreur lors de la gestion des favoris :", error.response?.data || error);
-//         }
-//     };
-
-//     const handleCartClick = async (productId) => {
-//         try {
-//             const cartItem = cart.find(item => item.product?._id === productId);
-            
-//             if (cartItem) {
-//                 await removeFromCart(cartItem._id);
-//             } else {
-//                 await addToCart(productId, 1);
-//             }
-//         } catch (error) {
-//             console.error("❌ Erreur lors de l'ajout/suppression du panier", error);
-//         }
-// >>>>>>> nom-de-ta-branche
-//     };
     
 import { FiHeart } from "react-icons/fi";
 import { fetchProducts, fetchProductRating, fetchCommentsByProduct, sendMessage, addToCart, removeFromCart } from "../../utils/api";
@@ -485,24 +210,56 @@ const ProductList = forwardRef(({ searchTerm, activeCategory, activeSubCategory,
     return matchesBasicCriteria && matchesMinRating && matchesMaxRating;
   });
 
-  // Composant pour afficher les étoiles de rating
+  // // Composant pour afficher les étoiles de rating
+  // const RatingStars = ({ rating }) => {
+  //   // S'assurer que le rating est un nombre valide
+  //   const ratingValue = parseFloat(rating) || 0;
+    
+  //   // Arrondir à la demi-étoile la plus proche
+  //   const roundedRating = Math.round(ratingValue * 2) / 2;
+  //   const fullStars = Math.floor(roundedRating);
+  //   const hasHalfStar = roundedRating % 1 !== 0;
+  //   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+  //   return (
+  //     <div className="flex items-center">
+  //       {[...Array(fullStars)].map((_, i) => (
+  //         <FaStar key={`full-${i}`} className="text-amber-500 text-sm" />
+  //       ))}
+  //       {hasHalfStar && <FaStarHalfAlt key="half" className="text-amber-500 text-sm" />}
+  //       {[...Array(emptyStars)].map((_, i) => (
+  //         <FaRegStar key={`empty-${i}`} className="text-amber-300 text-sm" />
+  //       ))}
+  //     </div>
+  //   );
+  // };
+
   const RatingStars = ({ rating }) => {
     // S'assurer que le rating est un nombre valide
     const ratingValue = parseFloat(rating) || 0;
     
     // Arrondir à la demi-étoile la plus proche
     const roundedRating = Math.round(ratingValue * 2) / 2;
-    const fullStars = Math.floor(roundedRating);
+    
+    // Calculer le nombre d'étoiles pleines et vides, en garantissant des valeurs non négatives
+    const fullStars = Math.max(0, Math.floor(roundedRating));
     const hasHalfStar = roundedRating % 1 !== 0;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    // Pour les étoiles vides, s'assurer qu'il y en a au minimum 0
+    // Le calcul original: 5 - fullStars - (hasHalfStar ? 1 : 0)
+    const emptyStars = Math.max(0, 5 - fullStars - (hasHalfStar ? 1 : 0));
+    
+    // Sécuriser la création des tableaux avec des vérifications
+    const fullStarsArray = fullStars > 0 ? Array(fullStars).fill(null) : [];
+    const emptyStarsArray = emptyStars > 0 ? Array(emptyStars).fill(null) : [];
     
     return (
       <div className="flex items-center">
-        {[...Array(fullStars)].map((_, i) => (
+        {fullStarsArray.map((_, i) => (
           <FaStar key={`full-${i}`} className="text-amber-500 text-sm" />
         ))}
         {hasHalfStar && <FaStarHalfAlt key="half" className="text-amber-500 text-sm" />}
-        {[...Array(emptyStars)].map((_, i) => (
+        {emptyStarsArray.map((_, i) => (
           <FaRegStar key={`empty-${i}`} className="text-amber-300 text-sm" />
         ))}
       </div>

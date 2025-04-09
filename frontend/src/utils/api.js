@@ -828,4 +828,16 @@ export const deleteUser = async (userId) => {
   }
 };
 
+// api.js
+export const deleteSearchHistoryItem = async (productId) => {
+  try {
+    const response = await api.delete(`/search-history/delete/${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'historique de recherche:", error);
+    throw error;
+  }
+};
+
+
 export default api;

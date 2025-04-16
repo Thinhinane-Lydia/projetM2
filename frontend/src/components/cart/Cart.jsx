@@ -1,3 +1,5 @@
+
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
@@ -22,11 +24,20 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (productId, quantity = 1) => {
+  const addToCart = async (productId) => {
     try {
+      // Vérifier si le produit est déjà dans le panier
+      const existingItem = cart.find(item => item.product?._id === productId);
+      
+      if (existingItem) {
+        // Le produit est déjà dans le panier, pas besoin de l'ajouter à nouveau
+        return;
+      }
+      
+      // Ajouter le produit au panier (sans quantité)
       const response = await axios.post(
         "http://localhost:8000/api/v2/cart",
-        { productId, quantity },
+        { productId },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       setCart([...cart, response.data]);
@@ -46,40 +57,17 @@ export const CartProvider = ({ children }) => {
     }
   };
 
- 
-const updateCartItemQuantity = async (cartItemId, newQuantity) => {
-    try {
-      // First update the local state immediately for better UX
-      setCart(prevCart =>
-        prevCart.map(item =>
-          item._id === cartItemId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-      
-      // Then make the API call
-      await axios.put(
-        `http://localhost:8000/api/v2/cart/${cartItemId}`,
-        { quantity: newQuantity },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
-      
-      // Optionally fetch fresh data after API call completes
-      // fetchCart();  // Uncomment if you want to refresh from server
-    } catch (error) {
-      console.error("❌ Erreur lors de la mise à jour de la quantité:", error);
-      // Revert the local change on error
-      fetchCart(); // Reload the cart to correct state
-    }
-  };
-
+  // La fonction de mise à jour de la quantité n'est plus nécessaire, elle peut être supprimée
+  
   return (
-    <CartContext.Provider value={{
-      cart,
-      addToCart,
-      removeFromCart,
-      updateCartItemQuantity,
-      fetchCart
-    }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart,
+        removeFromCart,
+        fetchCart
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
@@ -88,6 +76,3 @@ const updateCartItemQuantity = async (cartItemId, newQuantity) => {
 export const useCart = () => {
   return useContext(CartContext);
 };
-
-
-

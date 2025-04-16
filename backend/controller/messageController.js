@@ -29,7 +29,7 @@ exports.getConversationMessages = async (req, res) => {
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
       return res.status(404).json({ 
-        success: false, 
+        success: false,   
         message: "Conversation non trouvée" 
       });
     }

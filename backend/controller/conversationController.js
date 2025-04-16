@@ -55,71 +55,130 @@ exports.getUserConversations = async (req, res) => {
  * Démarre une nouvelle conversation ou récupère une existante
  * @route POST /api/v2/conversations/start
  */
+// exports.startConversation = async (req, res) => {
+//     const { userId } = req.body;
+//     const currentUserId = req.user._id;
+
+//     if (!userId) {
+//         return res.status(400).json({ 
+//           success: false, 
+//           message: "ID utilisateur requis" 
+//         });
+//     }
+
+//     try {
+//         if (!isValidObjectId(userId)) {
+//             return res.status(400).json({ 
+//               success: false, 
+//               message: "ID utilisateur invalide" 
+//             });
+//         }
+
+//         // Vérifier si l'utilisateur n'essaie pas de démarrer une conversation avec lui-même
+//         if (userId.toString() === currentUserId.toString()) {
+//             return res.status(400).json({ 
+//                 success: false, 
+//                 message: "Impossible de démarrer une conversation avec soi-même" 
+//             });
+//         }
+
+//         const targetUserId = new mongoose.Types.ObjectId(userId);
+
+//         // Vérifier si l'utilisateur existe
+//         const targetUser = await User.findById(targetUserId);
+//         if (!targetUser) {
+//             return res.status(404).json({ 
+//                 success: false, 
+//                 message: "Utilisateur introuvable" 
+//             });
+//         }
+
+//         // Vérifier si la conversation existe déjà
+//         let conversation = await Conversation.findOne({ 
+//             participants: { 
+//                 $all: [currentUserId, targetUserId],
+//                 $size: 2  // Assure qu'il n'y a que 2 participants
+//             } 
+//         });
+
+//         if (!conversation) {
+//             conversation = new Conversation({ 
+//               participants: [currentUserId, targetUserId] 
+//             });
+//             await conversation.save();
+//         }
+
+//         return res.status(200).json({ 
+//           success: true, 
+//           conversationId: conversation._id 
+//         });
+//     } catch (error) {
+//         console.error("❌ Erreur lors du démarrage de la conversation:", error);
+//         return res.status(500).json({ 
+//           success: false, 
+//           message: "Erreur serveur" 
+//         });
+//     }
+// };
+
 exports.startConversation = async (req, res) => {
-    const { userId } = req.body;
-    const currentUserId = req.user._id;
+  const { receiverId } = req.body;
+  const currentUserId = req.user._id;
 
-    if (!userId) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "ID utilisateur requis" 
-        });
-    }
+  if (!receiverId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "ID utilisateur requis" 
+      });
+  }
 
-    try {
-        if (!isValidObjectId(userId)) {
-            return res.status(400).json({ 
-              success: false, 
-              message: "ID utilisateur invalide" 
-            });
-        }
+  try {
+      if (!isValidObjectId(receiverId)) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "ID utilisateur invalide" 
+          });
+      }
 
-        // Vérifier si l'utilisateur n'essaie pas de démarrer une conversation avec lui-même
-        if (userId.toString() === currentUserId.toString()) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Impossible de démarrer une conversation avec soi-même" 
-            });
-        }
+      if (receiverId.toString() === currentUserId.toString()) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Impossible de démarrer une conversation avec soi-même" 
+          });
+      }
 
-        const targetUserId = new mongoose.Types.ObjectId(userId);
+      const targetUser = await User.findById(receiverId);
+      if (!targetUser) {
+          return res.status(404).json({ 
+            success: false, 
+            message: "Utilisateur introuvable" 
+          });
+      }
 
-        // Vérifier si l'utilisateur existe
-        const targetUser = await User.findById(targetUserId);
-        if (!targetUser) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Utilisateur introuvable" 
-            });
-        }
+      let conversation = await Conversation.findOne({ 
+          participants: { $all: [currentUserId, receiverId], $size: 2 }
+      });
 
-        // Vérifier si la conversation existe déjà
-        let conversation = await Conversation.findOne({ 
-            participants: { 
-                $all: [currentUserId, targetUserId],
-                $size: 2  // Assure qu'il n'y a que 2 participants
-            } 
-        });
+      if (!conversation) {
+          conversation = new Conversation({ 
+            participants: [currentUserId, receiverId] 
+          });
+          await conversation.save();
+      }
 
-        if (!conversation) {
-            conversation = new Conversation({ 
-              participants: [currentUserId, targetUserId] 
-            });
-            await conversation.save();
-        }
-
-        return res.status(200).json({ 
-          success: true, 
-          conversationId: conversation._id 
-        });
-    } catch (error) {
-        console.error("❌ Erreur lors du démarrage de la conversation:", error);
-        return res.status(500).json({ 
-          success: false, 
-          message: "Erreur serveur" 
-        });
-    }
+      return res.status(200).json({ 
+        success: true, 
+        conversationId: conversation._id 
+      });
+  } catch (error) {
+      console.error("❌ Erreur lors du démarrage de la conversation:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erreur serveur" 
+      });
+  }
 };
+
 
 /**
  * Récupère une conversation par son ID

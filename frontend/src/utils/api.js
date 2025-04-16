@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 // Base URL configuration
@@ -635,7 +636,7 @@ export const fetchCart = async () => {
  */
 export const addToCart = async (productId, quantity = 1) => {
   try {
-    const response = await api.post("/cart", { productId, quantity });
+    const response = await api.post("/cart", { productId});
     return response.data;
   } catch (error) {
     return handleApiError(error, null, "Error adding to cart");
@@ -659,7 +660,7 @@ export const removeFromCart = async (cartItemId) => {
  */
 export const updateCartItem = async (cartItemId, quantity) => {
   try {
-    const response = await api.put(`/cart/${cartItemId}`, { quantity });
+    const response = await api.put(`/cart/${cartItemId}`);
     return response.data;
   } catch (error) {
     return handleApiError(error, null, "Error updating cart item");
@@ -765,6 +766,19 @@ export const searchUsers = async (query) => {
     return response.data;
   } catch (error) {
     return handleApiError(error, { success: false, data: [] }, "Erreur lors de la recherche d'utilisateurs");
+  }
+};
+export const checkout = async (shippingAddress) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/order/checkout`,
+      { shippingAddress },
+      { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors du passage de la commande', error);
+    throw error;
   }
 };
 

@@ -73,6 +73,7 @@ const favoriteRoutes = require("./routes/favorite");
 const cartRoutes = require("./routes/cartRoutes");
 const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 
 app.use("/api/v2/notifications", notificationRoutes);
@@ -87,6 +88,7 @@ app.use("/api/v2/cart", cartRoutes);
 app.use('/api/v2/messages' ,messageRoutes);
 app.use('/api/v2/conversations',conversationRoutes);
 app.use("/api/v2/search-history", searchHistoryRoutes); 
+app.use("/api/v2/order", orderRoutes);
 
 
 

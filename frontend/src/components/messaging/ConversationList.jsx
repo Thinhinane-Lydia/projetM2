@@ -120,7 +120,9 @@ const ConversationsList = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, handleSearchUser]);
 
+
   // Fonction améliorée pour obtenir le nom d'affichage
+
   const getDisplayName = useCallback((participant) => {
     // Afficher les données de participant pour le débogage
     console.log("Données participant:", participant);
@@ -188,8 +190,13 @@ const ConversationsList = () => {
       return `Utilisateur #${participant._id.substring(0, 5)}`;
     }
     
+    // Si un nom est disponible, utilise-le
+    if (participant.name) return participant.name;
+  
+    // Sinon, affiche "Utilisateur" par défaut
     return "Utilisateur";
   }, []);
+  
 
   // Fonction améliorée pour obtenir l'avatar URL avec gestion des erreurs
   const getAvatarUrl = useCallback((participant) => {
@@ -299,6 +306,8 @@ const ConversationsList = () => {
     }
   };
 
+
+  
   // Formatter la date du dernier message
   const formatLastMessageTime = (dateString) => {
     if (!dateString) return '';

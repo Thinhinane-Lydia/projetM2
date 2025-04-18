@@ -826,9 +826,7 @@ export const fetchAllUsers = async () => {
     return handleApiError(error, { users: [], userCount: 0 }, "❌ Erreur fetchAllUsers");
   }
 };
-/**
- * ✅ Supprimer un utilisateur (Admin uniquement)
- */
+
 export const deleteUser = async (userId) => {
   try {
     const response = await api.delete(`/user/delete-user/${userId}`);
@@ -842,7 +840,10 @@ export const deleteUser = async (userId) => {
   }
 };
 
-// api.js
+
+
+
+
 export const deleteSearchHistoryItem = async (productId) => {
   try {
     const response = await api.delete(`/search-history/delete/${productId}`);

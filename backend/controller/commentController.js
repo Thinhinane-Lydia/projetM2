@@ -9,7 +9,7 @@ const catchAsyncError = require("../middleware/catchAsyncError");
 const ErrorHandler = require("../utils/ErrorHandler");
 const { sendNotification } = require("../utils/notificationService");
 const Product = require("../model/Product"); // Importer Product pour récupérer le vendeur
-
+ 
 // 🔹 Ajouter un commentaire
 exports.createComment = catchAsyncError(async (req, res, next) => {
   const { product, text, rating } = req.body;
@@ -45,6 +45,21 @@ exports.createComment = catchAsyncError(async (req, res, next) => {
 });
 
 // 🔹 Récupérer les commentaires d'un produit
+// exports.getCommentsByProduct = catchAsyncError(async (req, res, next) => {
+//   const comments = await Comment.find({ product: req.params.productId })
+//     .populate({ path: "user", select: "name avatar _id email" })
+//     .sort({ createdAt: -1 });
+
+//   // 🔹 Identifier si le commentaire appartient à l'utilisateur actuel
+//   const enhancedComments = comments.map((comment) => {
+//     const commentObj = comment.toObject();
+//     commentObj.user.isCurrentUser = req.user && comment.user._id.toString() === req.user.id;
+//     return commentObj;
+//   });
+
+//   res.status(200).json({ success: true, comments: enhancedComments });
+// });
+// 🔹 Récupérer les commentaires d'un produit
 exports.getCommentsByProduct = catchAsyncError(async (req, res, next) => {
   const comments = await Comment.find({ product: req.params.productId })
     .populate({ path: "user", select: "name avatar _id email" })
@@ -53,12 +68,35 @@ exports.getCommentsByProduct = catchAsyncError(async (req, res, next) => {
   // 🔹 Identifier si le commentaire appartient à l'utilisateur actuel
   const enhancedComments = comments.map((comment) => {
     const commentObj = comment.toObject();
-    commentObj.user.isCurrentUser = req.user && comment.user._id.toString() === req.user.id;
+    
+    // Vérifiez si comment.user existe avant d'accéder à ses propriétés
+    if (commentObj.user) {
+      commentObj.user.isCurrentUser = req.user && commentObj.user._id.toString() === req.user.id;
+    } else {
+      // Si comment.user est null ou undefined, vous pouvez gérer le cas ici (par exemple, laisser isCurrentUser undefined)
+      commentObj.user = { isCurrentUser: false };  // Exemple de traitement dans ce cas
+    }
+
     return commentObj;
   });
 
   res.status(200).json({ success: true, comments: enhancedComments });
 });
+
+
+//🔹 Supprimer un commentaire
+// exports.deleteComment = catchAsyncError(async (req, res, next) => {
+//   const comment = await Comment.findById(req.params.id);
+//   if (!comment) return next(new ErrorHandler("Commentaire non trouvé", 404));
+
+//   // 🔹 Vérifier si l'utilisateur est bien l'auteur du commentaire
+//   if (comment.user.toString() !== req.user.id) {
+//     return next(new ErrorHandler("Non autorisé à supprimer ce commentaire", 403));
+//   }
+
+//   await comment.deleteOne();
+//   res.status(200).json({ success: true, message: "Commentaire supprimé" });
+// });
 
 // 🔹 Supprimer un commentaire
 exports.deleteComment = catchAsyncError(async (req, res, next) => {
@@ -73,3 +111,5 @@ exports.deleteComment = catchAsyncError(async (req, res, next) => {
   await comment.deleteOne();
   res.status(200).json({ success: true, message: "Commentaire supprimé" });
 });
+
+

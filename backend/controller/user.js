@@ -10,6 +10,7 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const bcrypt = require("bcryptjs");
 const { deleteProduct } = require("../controller/product");
 const Product = require("../model/Product");
+const Comment = require("../model/Comment");
 
 
 const router = express.Router();
@@ -305,16 +306,19 @@ router.delete("/delete-user/:userId", isAuthenticated, isAdmin, async (req, res,
       // Supprimer tous les produits associés à cet utilisateur
       await Product.deleteMany({ seller: userId });
   
+      // Supprimer tous les commentaires associés à cet utilisateur
+      await Comment.deleteMany({ user: userId });
+  
       // Suppression de l'utilisateur
       await User.deleteOne({ _id: userId });
   
       res.status(200).json({
         success: true,
-        message: "Utilisateur et ses produits supprimés avec succès.",
+        message: "Utilisateur et ses produits et commentaires supprimés avec succès.",
       });
     } catch (error) {
       next(error);
     }
   });
-  
+
 module.exports = router;

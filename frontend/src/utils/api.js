@@ -853,6 +853,189 @@ export const deleteSearchHistoryItem = async (productId) => {
     throw error;
   }
 };
+export const markMessagesAsRead = async (conversationId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Authentification requise");
+    
+    const response = await axios.put(`${API_BASE_URL}/messages/read/${conversationId}`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (response.data.success) {
+      return response.data.data;
+    } else {
+      throw new Error(response.data?.message || "Erreur lors du marquage des messages comme lus");
+    }
+  } catch (error) {
+    console.error("API Error - markMessagesAsRead:", error);
+    throw error;
+  }
+};
+
+/**
+ * Bloquer un utilisateur
+ */
+// Dans api.js
+
+/**
+ * Bloque un utilisateur par ID
+ * @param {string} userId
+ * @returns {Promise<Object>} Réponse de l'API
+ */
+export const blockUser = async (userId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Utilisateur non authentifié");
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/users/block/${userId}`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors du blocage de l'utilisateur", error);
+    throw error;
+  }
+};
+
+/**
+ * Débloquer un utilisateur
+ */
+export const unblockUser = async (userId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return { success: false, message: "Non authentifié" };
+    }
+
+    // Changed from DELETE to POST to match your router definition
+    const response = await api.post(`/users/unblock/${userId}`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    return response.data;
+  } catch (error) {
+    return handleApiError(
+      error, 
+      { success: false }, 
+      "Erreur lors du déblocage de l'utilisateur"
+    );
+  }
+};
+/**
+ * Vérifier si un utilisateur est bloqué
+ */
+export const isUserBlocked = async (userId) => {
+  try {
+    const response = await api.get(`/users/is-blocked/${userId}`);
+    return response.data;
+  } catch (error) {
+    return handleApiError(
+      error, 
+      { success: false, isBlocked: false }, 
+      "Erreur lors de la vérification du statut de blocage"
+    );
+  }
+};
+
+/**
+ 
+ * Récupérer la liste des utilisateurs bloqués
+ */
+export const getBlockedUsers = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return { success: false, message: "Non authentifié", data: [] };
+    }
+
+    const response = await api.get(`/users/blocked`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    return response.data;
+  } catch (error) {
+    return handleApiError(
+      error, 
+      { success: false, data: [] }, 
+      "Erreur lors de la récupération des utilisateurs bloqués"
+    );
+  }
+};
+
+/**
+ * Vérifier si un utilisateur est bloqué
+ */
+export const checkIfUserIsBlocked = async (userId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return { success: false, message: "Non authentifié", isBlocked: false };
+    }
+
+    const response = await api.get(`/users/is-blocked/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    return response.data;
+  } catch (error) {
+    return handleApiError(
+      error, 
+      { success: false, isBlocked: false }, 
+      "Erreur lors de la vérification du statut de blocage"
+    );
+  }
+};
+
+// Dans src/utils/api.js, ajoutez cette fonction
+export const checkIfUserIsBlockedBy = async (userId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return { isBlocked: false, error: "Non authentifié" };
+    }
+
+    const response = await axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:8000/api/v2"}/blocks/blocked-by/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    return { 
+      isBlocked: response.data.isBlocked, 
+      success: response.data.success 
+    };
+  } catch (error) {
+    console.error("Erreur lors de la vérification du statut de blocage:", error);
+    return { isBlocked: false, error: error.message };
+  }
+};
+
+// Dans api.js
+
+/**
+ * Récupère le profil utilisateur par ID
+ * @param {string} userId
+ * @returns {Promise<Object>} Détails de l'utilisateur
+ */
+export const fetchUserProfile = async (userId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Utilisateur non authentifié");
+    }
+
+    const response = await axios.get(`${API_BASE_URL}/user/profil/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la récupération du profil utilisateur", error);
+    throw error;
+  }
+};
 
 
 export default api;

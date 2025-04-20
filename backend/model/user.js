@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema({
       },
     }
   ],
+  // Ajoutez ce champ à votre modèle User
+blockedUsers: [{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'User'
+}],
  
   role: {
     type: String,

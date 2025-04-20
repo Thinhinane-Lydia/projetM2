@@ -680,3 +680,24 @@ input:-webkit-autofill:active {
   color: #aaa;
   cursor: not-allowed;
 }
+
+/* Styles pour assurer la responsivité */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Pour empêcher le défilement horizontal */
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+/* Pour s'assurer que les longs noms et messages sont tronqués correctement */
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

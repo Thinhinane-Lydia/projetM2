@@ -74,6 +74,7 @@ const cartRoutes = require("./routes/cartRoutes");
 const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const blockRoutes = require("./routes/blockRoutes");
 
 
 app.use("/api/v2/notifications", notificationRoutes);
@@ -89,7 +90,7 @@ app.use('/api/v2/messages' ,messageRoutes);
 app.use('/api/v2/conversations',conversationRoutes);
 app.use("/api/v2/search-history", searchHistoryRoutes); 
 app.use("/api/v2/order", orderRoutes);
-
+app.use("/api/v2/users", blockRoutes);
 
 
 // ✅ Lancer le serveur

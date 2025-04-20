@@ -186,8 +186,9 @@ router.get("/logout", (req, res) => {
     });
 });
 
-// Route : Récupération du profil utilisateur
-router.get("/profile", isAuthenticated, catchAsyncError(async (req, res, next) => {
+ 
+
+router.get("/profil", isAuthenticated, catchAsyncError(async (req, res, next) => {
     const user = await User.findById(req.user.id).select("-password");
     if (!user) {
         return next(new ErrorHandler("Utilisateur introuvable.", 404));
@@ -198,6 +199,8 @@ router.get("/profile", isAuthenticated, catchAsyncError(async (req, res, next) =
         user,
     });
 }));
+
+
 // Route pour promouvoir un utilisateur en admin
 router.put("/promote-to-admin/:userId", isAuthenticated, isAdmin, catchAsyncError(async (req, res, next) => {
     const { userId } = req.params;
@@ -320,5 +323,7 @@ router.delete("/delete-user/:userId", isAuthenticated, isAdmin, async (req, res,
       next(error);
     }
   });
+
+  
 
 module.exports = router;

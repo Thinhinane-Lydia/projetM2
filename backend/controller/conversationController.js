@@ -55,6 +55,7 @@ exports.getUserConversations = async (req, res) => {
  * Démarre une nouvelle conversation ou récupère une existante
  * @route POST /api/v2/conversations/start
  */
+
 // exports.startConversation = async (req, res) => {
 //     const { userId } = req.body;
 //     const currentUserId = req.user._id;
@@ -120,12 +121,11 @@ exports.getUserConversations = async (req, res) => {
 //         });
 //     }
 // };
-
 exports.startConversation = async (req, res) => {
-  const { receiverId } = req.body;
+  const { userId } = req.body;
   const currentUserId = req.user._id;
 
-  if (!receiverId) {
+  if (!userId) {
       return res.status(400).json({ 
         success: false, 
         message: "ID utilisateur requis" 
@@ -133,21 +133,21 @@ exports.startConversation = async (req, res) => {
   }
 
   try {
-      if (!isValidObjectId(receiverId)) {
+      if (!isValidObjectId(userId)) {
           return res.status(400).json({ 
             success: false, 
             message: "ID utilisateur invalide" 
           });
       }
 
-      if (receiverId.toString() === currentUserId.toString()) {
+      if (userId.toString() === currentUserId.toString()) {
           return res.status(400).json({ 
             success: false, 
             message: "Impossible de démarrer une conversation avec soi-même" 
           });
       }
 
-      const targetUser = await User.findById(receiverId);
+      const targetUser = await User.findById(userId);
       if (!targetUser) {
           return res.status(404).json({ 
             success: false, 
@@ -156,12 +156,12 @@ exports.startConversation = async (req, res) => {
       }
 
       let conversation = await Conversation.findOne({ 
-          participants: { $all: [currentUserId, receiverId], $size: 2 }
+          participants: { $all: [currentUserId, userId], $size: 2 }
       });
 
       if (!conversation) {
           conversation = new Conversation({ 
-            participants: [currentUserId, receiverId] 
+            participants: [currentUserId, userId] 
           });
           await conversation.save();
       }

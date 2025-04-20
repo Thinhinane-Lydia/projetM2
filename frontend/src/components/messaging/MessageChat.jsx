@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { fetchConversationDetails } from '../../utils/api';
+import { 
+  fetchConversationDetails, 
+  checkIfUserIsBlocked,
+  checkIfUserIsBlockedBy,
+  getBlockedUsers,
+  fetchUserProfile  
+} from '../../utils/api';
+import { toast } from 'react-toastify'; // Make sure you've installed this package
 
 // Hook personnalisé pour la résolution asynchrone des noms
 const useCachedDisplayName = (user, getDisplayName) => {
@@ -53,15 +60,59 @@ const MessageChat = () => {
   const textareaRef = useRef(null);
   const optionsRef = useRef(null);
   const navigate = useNavigate();
-
+  const [isBlocked, setIsBlocked] = useState(false);
   const currentUserId = localStorage.getItem('userId');
   const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000/api/v2";
   const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_URL || "http://localhost:8000";
-
-  // Fonction pour défiler vers le dernier message
+  const [isBlockedByRecipient, setIsBlockedByRecipient] = useState(false);
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  
+ 
+ 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const messagesContainer = document.getElementById('messagesContainer');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
   };
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages]);
+  // Ajoutez un useEffect plus robuste pour le défilement
+useEffect(() => {
+  // Déclenchement du défilement après le rendu des messages
+  if (messages.length > 0) {
+    // Petit délai pour s'assurer que le rendu est terminé
+    setTimeout(scrollToBottom, 200);
+  }
+}, [messages]);
+
+  const fetchBlockedUsers = useCallback(async () => {
+    try {
+      const result = await getBlockedUsers();
+      if (result.success) {
+        setBlockedUsers(result.data);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des utilisateurs bloqués:", error);
+    }
+  }, []);
+
+    // Vérifier si un utilisateur est dans la liste des bloqués
+    const isUserBlocked = useCallback((userId) => {
+      return blockedUsers.some(blockedUser => {
+        // Gérer différentes structures possibles de l'ID utilisateur
+        const blockedId = blockedUser._id || blockedUser.user || blockedUser;
+        return blockedId === userId || blockedId?._id === userId;
+      });
+    }, [blockedUsers]);
+
+      // Effet initial pour charger les utilisateurs bloqués
+  useEffect(() => {
+    fetchBlockedUsers();
+  }, [fetchBlockedUsers]);
 
   // Fermer les options quand on clique en dehors
   useEffect(() => {
@@ -77,6 +128,35 @@ const MessageChat = () => {
     };
   }, []);
 
+  const fetchUserProfile = async (userId) => {
+    // Si l'utilisateur est déjà dans le cache, retourner directement
+    if (userCache[userId]) return userCache[userId];
+  
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Utilisateur non authentifié");
+  
+      const response = await axios.get(`${API_BASE_URL}/user/profil`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+  
+      if (response.data.success) {
+        const userData = response.data.data;
+        // Mettre à jour le cache
+        setUserCache(prev => ({ ...prev, [userId]: userData })); 
+        return userData;
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération du profil utilisateur:", error);
+      throw error;
+    }
+  };
+  
+
+  a  
+  
+
   // Fonction pour obtenir les détails d'un utilisateur par son ID
   const fetchUserDetails = useCallback(async (userId) => {
     // Vérifier si nous avons déjà cet utilisateur dans le cache
@@ -84,9 +164,9 @@ const MessageChat = () => {
     
     try {
       const token = localStorage.getItem("token");
-      if (!token) return null;
+      if (!token) return null ;
       
-      const response = await axios.get(`${API_BASE_URL}/users/${userId}`, {
+      const response = await axios.get(`${API_BASE_URL}/users/profil/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -106,7 +186,48 @@ const MessageChat = () => {
     
     return null;
   }, [API_BASE_URL, userCache]);
+
+  const checkIfBlockedByRecipient = useCallback(async () => {
+    if (!recipient) return;
+    
+    try {
+      const recipientId = recipient._id || (recipient.user && recipient.user._id) || recipient;
+      const userId = typeof recipientId === 'object' ? recipientId.toString() : recipientId;
+      
+      const result = await checkIfUserIsBlockedBy(userId);
+      setIsBlockedByRecipient(result.isBlocked);
+    } catch (error) {
+      console.error("Erreur lors de la vérification du statut de blocage:", error);
+    }
+  }, [recipient]);
+
+  useEffect(() => {
+    checkIfBlockedByRecipient();
+  }, [recipient, checkIfBlockedByRecipient]);
   
+  
+  // Dans votre useEffect pour vérifier le statut de blocage
+  useEffect(() => {
+    const checkBlockStatus = async () => {
+      if (!recipient) return;
+      
+      try {
+        console.log("Vérification du statut de blocage pour:", recipient);
+        const recipientId = recipient._id || (recipient.user && recipient.user._id) || recipient;
+        const userId = typeof recipientId === 'object' ? recipientId.toString() : recipientId;
+        
+        console.log("ID du destinataire:", userId);
+        const result = await checkIfUserIsBlocked(userId);
+        console.log("Résultat de la vérification:", result);
+        setIsBlocked(result.isBlocked);
+      } catch (error) {
+        console.error("Erreur lors de la vérification du statut de blocage:", error);
+      }
+    };
+    
+    checkBlockStatus();
+  }, [recipient]);
+
   // Fonction pour formater la date
   const formatMessageDate = (dateString) => {
     const date = new Date(dateString);
@@ -329,28 +450,88 @@ const MessageChat = () => {
   }, [conversationId, getOtherParticipant, navigate]);
 
   // Fonction pour charger les messages
+  // Fonction pour charger les messages
+  // const fetchMessages = useCallback(async () => {
+  //   if (!conversationId) return;
+
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       navigate('/login');
+  //       return;
+  //     }
+      
+  //     const response = await axios.get(`${API_BASE_URL}/messages/conversation/${conversationId}`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+      
+  //     if (response.data.success) {
+  //       console.log("Messages reçus:", response.data.data);
+        
+  //       // Filtrer les messages des utilisateurs bloqués
+  //       const filteredMessages = response.data.data.filter(message => {
+  //         const senderId = message.senderId?._id || (typeof message.senderId === 'string' ? message.senderId : null);
+        
+  //         // Toujours afficher nos propres messages
+  //         if (senderId === currentUserId) return true;
+        
+  //         // Vérifier si l'utilisateur qui a envoyé le message est bloqué
+  //         return !isUserBlocked(senderId);
+  //       });
+        
+        
+  //       setMessages(filteredMessages);
+        
+  //       // Pour chaque message, préchargez les informations utilisateur si nécessaire
+  //       filteredMessages.forEach(message => {
+  //         if (message.senderId && typeof message.senderId === 'object' && message.senderId._id && !message.senderId.name) {
+  //           fetchUserDetails(message.senderId._id);
+  //         }
+  //       });
+  //     } else {
+  //       throw new Error(response.data?.message || 'Erreur lors du chargement des messages');
+  //     }
+  //   } catch (err) {
+  //     console.error('Error fetching messages:', err);
+  //     setError(`Erreur: ${err.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [conversationId, API_BASE_URL, navigate, fetchUserDetails, currentUserId, isUserBlocked]);
   const fetchMessages = useCallback(async () => {
     if (!conversationId) return;
-
+  
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         navigate('/login');
         return;
       }
-      
+  
       const response = await axios.get(`${API_BASE_URL}/messages/conversation/${conversationId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+  
       if (response.data.success) {
         console.log("Messages reçus:", response.data.data);
-        setMessages(response.data.data);
-        
+  
+        // Filtrer les messages des utilisateurs bloqués
+        const filteredMessages = response.data.data.filter(message => {
+          const senderId = message.senderId?._id || (typeof message.senderId === 'string' ? message.senderId : null);
+  
+          // Toujours afficher nos propres messages
+          if (senderId === currentUserId) return true;
+  
+          // Vérifier si l'utilisateur qui a envoyé le message est bloqué
+          return !isUserBlocked(senderId); // Fonction `isUserBlocked` que vous avez déjà pour vérifier si l'utilisateur est bloqué
+        });
+  
+        setMessages(filteredMessages);
+  
         // Pour chaque message, préchargez les informations utilisateur si nécessaire
-        response.data.data.forEach(message => {
+        filteredMessages.forEach(message => {
           if (message.senderId && typeof message.senderId === 'object' && message.senderId._id && !message.senderId.name) {
-            fetchUserDetails(message.senderId._id);
+            fetchUserDetails(message.senderId._id); // Récupérer le profil de l'utilisateur si nécessaire
           }
         });
       } else {
@@ -362,19 +543,20 @@ const MessageChat = () => {
     } finally {
       setLoading(false);
     }
-  }, [conversationId, API_BASE_URL, navigate, fetchUserDetails]);
+  }, [conversationId, API_BASE_URL, navigate, fetchUserDetails, currentUserId, isUserBlocked]);
+  
 
   // Marquer les messages comme lus
   const markMessagesAsRead = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token || !conversationId) return;
-      
-      await axios.put(`${API_BASE_URL}/messages/read/${conversationId}`, {}, {
+  
+      const response = await axios.put(`${API_BASE_URL}/messages/read/${conversationId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      // Mettre à jour les messages localement
+  
+      // Mettre à jour les messages localement pour marquer comme lus
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.senderId?._id !== currentUserId && !msg.read 
@@ -386,6 +568,7 @@ const MessageChat = () => {
       console.error('Erreur lors du marquage des messages comme lus:', err);
     }
   }, [conversationId, currentUserId, API_BASE_URL]);
+  
 
   // Effet initial pour charger la conversation et les messages
   useEffect(() => {
@@ -406,14 +589,12 @@ const MessageChat = () => {
       fetchMessages();
       markMessagesAsRead();
     }, 10000);
-    
-    return () => clearInterval(interval);
-  }, [conversationId, fetchConversationDetailsFromApi, fetchMessages, markMessagesAsRead]);
 
-  // Effet pour défiler vers le bas après chargement ou ajout de messages
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Nettoie l'intervalle lorsque le composant est démonté ou que la conversation change
+    return () => clearInterval(interval);
+}, [conversationId, fetchMessages, markMessagesAsRead]);
+
+ 
 
   // Effet pour ajuster la hauteur du textarea
   useEffect(() => {
@@ -423,21 +604,34 @@ const MessageChat = () => {
     }
   }, [messageText]);
 
-  // Envoyer un message
+   
   const handleSend = async () => {
     if (!messageText.trim() || !recipient || sending) return;
-    
+  
+    // Empêcher l'envoi si l'utilisateur a bloqué le destinataire
+    if (isBlocked) {
+      setError(`Vous ne pouvez pas envoyer de message à ${recipientDisplayName} car vous l'avez bloqué.`);
+      return;
+    }
+  
+    // Empêcher l'envoi si le destinataire a bloqué l'utilisateur
+    if (isBlockedByRecipient) {
+      setError(`Vous ne pouvez pas envoyer de message à ${recipientDisplayName} car cet utilisateur vous a bloqué.`);
+      return;
+    }
+  
     const token = localStorage.getItem("token");
     if (!token) {
       navigate('/login');
       return;
     }
-    
+  
     try {
       setSending(true);
       
       const recipientId = recipient._id || (recipient.user && recipient.user._id) || recipient;
       
+      // Vérifiez que le message n'est pas envoyé si l'utilisateur est bloqué
       const response = await axios.post(`${API_BASE_URL}/messages`, {
         conversationId,
         text: messageText,
@@ -445,16 +639,23 @@ const MessageChat = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
+  
       if (response.data.success) {
-        // Ajouter le nouveau message à la liste
         setMessages(prevMessages => [...prevMessages, response.data.data]);
-        // Vider le champ de texte
         setMessageText('');
-        // Réinitialiser la hauteur du textarea
-        if (textareaRef.current) {
-          textareaRef.current.style.height = 'auto';
+        setError(null);
+        try {
+          await axios.put(`${API_BASE_URL}/conversations/${conversationId}/touch`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          // You could also emit an event here to notify other components to refresh
+          // For example, using a context or Redux action
+        } catch (updateErr) {
+          console.error("Error updating conversation timestamp:", updateErr);
         }
+        
+        setTimeout(scrollToBottom, 100);
       } else {
         throw new Error(response.data?.message || "Erreur lors de l'envoi du message");
       }
@@ -465,6 +666,92 @@ const MessageChat = () => {
       setSending(false);
     }
   };
+  
+  
+  
+  const blockUser = async (userId) => {
+    try {
+      if (!userId) {
+        toast.error("ID utilisateur manquant");
+        return { success: false };
+      }
+    
+    // Import and use the API utility function instead
+    const response = await import('../../utils/api').then(module => module.blockUser(userId));
+    
+    if (response.success) {
+      setIsBlocked(true);
+      toast.success(`Vous avez bloqué ${recipientDisplayName}`);
+    } else {
+      toast.error(response.message || "Erreur lors du blocage de l'utilisateur");
+    }
+    return response;
+  } catch (error) {
+    console.error("Erreur lors du blocage de l'utilisateur:", error);
+    toast.error("Une erreur est survenue lors du blocage de l'utilisateur");
+    return { success: false, error };
+  }
+};
+
+// Définition de la fonction pour débloquer un utilisateur
+const unblockUser = async (userId) => {
+  try {
+    if (!userId) {
+      toast.error("ID utilisateur manquant");
+      return { success: false };
+    }
+    
+    // Import and use the API utility function instead
+    const response = await import('../../utils/api').then(module => module.unblockUser(userId));
+    
+    if (response.success) {
+      setIsBlocked(false);
+      toast.success(`Vous avez débloqué ${recipientDisplayName}`);
+    } else {
+      toast.error(response.message || "Erreur lors du déblocage de l'utilisateur");
+    }
+    return response;
+  } catch (error) {
+    console.error("Erreur lors du déblocage de l'utilisateur:", error);
+    toast.error("Une erreur est survenue lors du déblocage de l'utilisateur");
+    return { success: false, error };
+  }
+};
+ 
+const handleBlockUser = async () => {
+  if (!recipient) return;
+
+  try {
+    const recipientId = recipient._id || (recipient.user && recipient.user._id) || recipient;
+    const userId = typeof recipientId === 'object' ? recipientId.toString() : recipientId;
+
+    let response;
+
+    if (isBlocked) {
+      response = await unblockUser(userId);
+      if (response.success) {
+        setIsBlocked(false);
+        // Recharger les messages pour afficher ceux qui étaient cachés
+        fetchMessages();
+      }
+    } else {
+      if (window.confirm(`Êtes-vous sûr de vouloir bloquer ${recipientDisplayName} ? Vous ne pourrez plus recevoir ses messages.`)) {
+        response = await blockUser(userId);
+        if (response.success) {
+          setIsBlocked(true);
+          // Recharger les messages pour filtrer ceux de l'utilisateur bloqué
+          fetchMessages();
+        }
+      }
+    }
+
+    setShowOptions(false);
+  } catch (error) {
+    console.error("Erreur lors de la gestion du blocage:", error);
+    toast.error("Une erreur est survenue lors du blocage");
+  }
+};
+
 
   // Supprimer un message
   const handleDeleteMessage = async (messageId, event) => {
@@ -492,11 +779,13 @@ const MessageChat = () => {
 
   // Gérer l'envoi avec la touche Entrée
   const handleKeyPress = (e) => {
+    // Si la touche appuyée est "Enter" sans "Shift" (empêcher l'envoi avec "Enter")
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+      e.preventDefault(); // Empêche l'ajout de nouvelle ligne
+      handleSend(); // Appel de la fonction pour envoyer le message
     }
   };
+  
 
   // Simulation de l'indication "est en train d'écrire"
   const handleTyping = () => {
@@ -606,11 +895,11 @@ const MessageChat = () => {
               {!isCurrentUser && showAvatar && (
                 <div className="flex-shrink-0 mr-2 self-end mb-1">
                   <div className="w-8 h-8 rounded-full overflow-hidden">
-                    <img 
-                      src={getAvatarUrl(message.senderId)} 
-                      // alt={`Avatar de ${getCachedDisplayName(message.senderId)}`}
-                      alt={`Avatar de ${nameCache[message.senderId._id] || message.senderId.name || 'Utilisateur'}`}
-                      className="w-full h-full object-cover"
+                  <img 
+  src={getAvatarUrl(recipient)} 
+  alt={recipientDisplayName} 
+  className="relative h-12 w-12 rounded-full object-cover border-2 border-amber-300 shadow-md z-10"
+
                       onError={(e) => {e.target.onerror = null; e.target.src = '/default-avatar.png';}}
                     />
                   </div>
@@ -778,12 +1067,33 @@ const MessageChat = () => {
                   Supprimer la conversation
                 </button>
                 <div className="border-t border-amber-100 my-1"></div>
-                <button className="flex items-center w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                  </svg>
-                  Bloquer l'utilisateur
-                </button>
+{/* Remplacer le bouton existant par celui-ci */}
+<button 
+  onClick={handleBlockUser}
+  className={`flex items-center w-full text-left px-4 py-3 text-sm ${
+    isBlocked 
+      ? 'text-green-600 hover:bg-green-50' 
+      : 'text-red-600 hover:bg-red-50'
+  } transition-colors`}
+>
+  <svg xmlns="http://www.w3.org/2000/svg" 
+    className={`h-4 w-4 mr-3 ${isBlocked ? 'text-green-500' : 'text-red-500'}`} 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    stroke="currentColor"
+  >
+    <path 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      strokeWidth={2} 
+      d={isBlocked 
+        ? "M13 10V3L4 14h7v7l9-11h-7z" // Icône "débloquer"
+        : "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" // Icône "bloquer"
+      } 
+    />
+  </svg>
+  {isBlocked ? "Débloquer l'utilisateur" : "Bloquer l'utilisateur"}
+</button>
               </div>
             </div>
           )}
@@ -792,56 +1102,65 @@ const MessageChat = () => {
 
       {/* Zone des messages avec motif subtil */}
       <div 
-        className="flex-grow overflow-y-auto p-4 bg-gradient-to-br from-amber-50 to-amber-100"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fde68a' fill-opacity='0.2' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '12px 12px'
-        }}
-      >
-        <div className="max-w-3xl mx-auto">
-          {renderMessages()}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
+  className="flex-grow overflow-y-auto p-4 bg-gradient-to-br from-amber-50 to-amber-100"
+  style={{
+    backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fde68a' fill-opacity='0.2' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
+    backgroundSize: '12px 12px',
+    height: 'calc(100vh - 140px)',  // Hauteur fixe pour soustraire l'en-tête et la zone de saisie
+    display: 'flex',
+    flexDirection: 'column',
+  }}
+  id="messagesContainer"
+>
+<div className="max-w-3xl mx-auto w-full flex-grow">
+    {renderMessages()}
+    <div ref={messagesEndRef} style={{ float: 'left', clear: 'both' }} />
+  </div>
+</div>
 
       {/* Zone de saisie stylisée */}
       <div className="bg-white border-t border-amber-200 p-5 shadow-inner">
         <div className="max-w-3xl mx-auto flex items-end">
           <div className="flex-grow bg-amber-50 rounded-2xl p-2 flex items-end border border-amber-200 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-100 transition-all shadow-sm">
-            <textarea 
-              ref={textareaRef}
-              value={messageText} 
-              onChange={(e) => {
-                setMessageText(e.target.value);
-                handleTyping(); // Signaler que l'utilisateur est en train d'écrire
-              }} 
-              onKeyPress={handleKeyPress}
-              placeholder="Écrivez votre message..."
-              disabled={!recipient || sending}
-              className="w-full bg-transparent border-none focus:ring-0 resize-none max-h-36 overflow-auto py-2 px-3 text-gray-700 placeholder-amber-400"
-              rows="1"
-            ></textarea>
+          <textarea
+  ref={textareaRef}
+  value={messageText}
+  onChange={(e) => {
+    setMessageText(e.target.value);
+    handleTyping(); // Signaler que l'utilisateur est en train d'écrire
+  }}
+  onKeyDown={handleKeyPress} // Utiliser onKeyDown au lieu de onKeyPress
+  placeholder={isBlockedByRecipient
+    ? `Vous ne pouvez pas envoyer de message à ${recipientDisplayName}` 
+    : "Écrivez votre message..."}
+  disabled={!recipient || sending || isBlockedByRecipient} // Désactiver si l'utilisateur est bloqué
+  className="w-full bg-transparent border-none focus:ring-0 resize-none max-h-36 overflow-auto py-2 px-3 text-gray-700 placeholder-amber-400"
+  rows="1"
+/>
+
+ 
             
-            <button 
-              onClick={handleSend} 
-              disabled={!messageText.trim() || !recipient || sending}
-              className={`flex-shrink-0 ml-2 p-3 rounded-full ${
-                !messageText.trim() || !recipient || sending 
-                  ? 'bg-amber-300 text-amber-100' 
-                  : 'bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 transform hover:scale-105'
-              } transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-md`}
-            >
-              {sending ? (
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              )}
-            </button>
+<button 
+  onClick={handleSend} 
+  disabled={!messageText.trim() || !recipient || sending || isBlockedByRecipient}
+  className={`flex-shrink-0 ml-2 p-3 rounded-full ${
+    !messageText.trim() || !recipient || sending || isBlockedByRecipient
+      ? 'bg-amber-300 text-amber-100 cursor-not-allowed' 
+      : 'bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 transform hover:scale-105'
+  } transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-md`}
+>
+  {sending ? (
+    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  ) : (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+    </svg>
+  )}
+</button>
+ 
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Message = require('../model/Message');
 const Conversation = require('../model/Conversation');
-
+const user = require('../model/user');
 /**
  * Valide un ID MongoDB
  * @param {string} id - ID à valider
@@ -57,7 +57,7 @@ exports.getConversationMessages = async (req, res) => {
     })
     .sort({ createdAt: 1 })
     .populate('senderId', 'name username email avatar')
-    .populate("receiverId", "name username email avatar")
+    .populate("receiverId", 'name username email avatar')
     .sort({ createdAt: 1 });
 
     // Marquer les messages non lus comme lus
@@ -91,6 +91,11 @@ exports.sendMessage = async (req, res) => {
   try {
     const { conversationId, text, recipientId } = req.body;
     const senderId = req.user._id;
+      // Vérifier si le destinataire est bloqué
+  const sender = await User.findById(senderId);
+  if (sender.blockedUsers.includes(recipientId)) {
+    return res.status(403).json({ success: false, message: 'Vous avez bloqué cet utilisateur' });
+  }
     
     // Validations
     if (!text || text.trim() === '') {
@@ -154,10 +159,12 @@ exports.sendMessage = async (req, res) => {
     console.error("❌ Erreur lors de l'envoi du message:", error);
     return res.status(500).json({
       success: false,
-      message: 'Erreur serveur'
+      message: 'Erreur serveur',
+      error: error.message 
     }); 
   }
 };
+
 
 /**
  * Supprime un message
@@ -335,6 +342,47 @@ exports.markMessageAsRead = async (req, res) => {
     return res.status(500).json({ 
       success: false, 
       message: "Erreur serveur" 
+    });
+  }
+};
+
+exports.deleteConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params; // Récupérer l'ID de la conversation à partir de l'URL
+    const userId = req.user._id; // L'utilisateur actuel
+
+    // Vérifier si la conversation existe
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation non trouvée',
+      });
+    }
+
+    // Vérifier si l'utilisateur est bien un participant de cette conversation
+    if (!conversation.participants.includes(userId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Vous n'êtes pas autorisé à supprimer cette conversation",
+      });
+    }
+
+    // Supprimer tous les messages associés à la conversation
+    await Message.deleteMany({ conversation: conversationId });
+
+    // Supprimer la conversation
+    await Conversation.findByIdAndDelete(conversationId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Conversation supprimée avec succès',
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la conversation :', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur serveur',
     });
   }
 };

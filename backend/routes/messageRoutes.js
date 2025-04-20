@@ -49,5 +49,7 @@ router.post("/", isAuthenticated, async (req, res) => {
 // ✅ Supprimer un message
 router.delete('/:messageId', isAuthenticated, messageController.deleteMessageForUser);
 
+// Supprimer une conversation
+router.delete('/conversation/:conversationId', isAuthenticated, messageController.deleteConversation);
 
 module.exports = router;

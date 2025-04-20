@@ -53,12 +53,17 @@ const MessageChat = () => {
   const textareaRef = useRef(null);
   const optionsRef = useRef(null);
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+const [isSearching, setIsSearching] = useState(false);
+const [searchResults, setSearchResults] = useState([]);
+const [currentResultIndex, setCurrentResultIndex] = useState(0);
 
   const currentUserId = localStorage.getItem('userId');
   const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000/api/v2";
   const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_URL || "http://localhost:8000";
 
-  // Fonction pour défiler vers le dernier message
+  // La fonction scrollToBottom est conservée au cas où vous voulez l'utiliser ailleurs
+  // mais l'effet qui l'appelle automatiquement est supprimé
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -76,7 +81,78 @@ const MessageChat = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+ //recherche dans ala conversation
+  const toggleSearch = () => {
+    setIsSearching(!isSearching);
+    if (!isSearching) {
+      // Réinitialiser les résultats à l'ouverture
+      setSearchQuery('');
+      setSearchResults([]);
+      setCurrentResultIndex(0);
+    }
+    setShowOptions(false); // Fermer le menu d'options
+  };
 
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    // Rechercher dans tous les messages
+    const results = messages.filter(message => 
+      message.content.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    setSearchResults(results);
+    setCurrentResultIndex(0);
+    
+    // Faire défiler jusqu'au premier résultat si présent
+    if (results.length > 0) {
+      scrollToMessage(results[0]._id);
+    }
+  };
+
+  const scrollToMessage = (messageId) => {
+    const messageElement = document.getElementById(`message-${messageId}`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Ajouter une mise en évidence temporaire
+      messageElement.classList.add('search-highlight');
+      setTimeout(() => {
+        messageElement.classList.remove('search-highlight');
+      }, 2000);
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login'); // Si non authentifié, rediriger vers la page de login
+          return;
+        }
+  
+        // Appel de l'API pour supprimer la conversation
+        const response = await axios.delete(`${API_BASE_URL}/messages/conversation/${conversationId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        if (response.data.success) {
+          navigate('/messages'); // Rediriger vers la liste des conversations
+        } else {
+          alert('Erreur lors de la suppression de la conversation');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suppression de la conversation :', error);
+        alert('Erreur lors de la suppression de la conversation');
+      }
+    }
+  };
+  
+  
+ 
   // Fonction pour obtenir les détails d'un utilisateur par son ID
   const fetchUserDetails = useCallback(async (userId) => {
     // Vérifier si nous avons déjà cet utilisateur dans le cache
@@ -298,7 +374,7 @@ const MessageChat = () => {
     return null;
   }, [currentUserId]);
 
-  // Utilisation de la fonction API importée
+  //Utilisation de la fonction API importée
   const fetchConversationDetailsFromApi = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
@@ -327,6 +403,12 @@ const MessageChat = () => {
       setError(`Erreur: ${err.message}`);
     }
   }, [conversationId, getOtherParticipant, navigate]);
+  
+
+  
+  
+//////////////
+
 
   // Fonction pour charger les messages
   const fetchMessages = useCallback(async () => {
@@ -363,6 +445,8 @@ const MessageChat = () => {
       setLoading(false);
     }
   }, [conversationId, API_BASE_URL, navigate, fetchUserDetails]);
+
+ 
 
   // Marquer les messages comme lus
   const markMessagesAsRead = useCallback(async () => {
@@ -410,10 +494,10 @@ const MessageChat = () => {
     return () => clearInterval(interval);
   }, [conversationId, fetchConversationDetailsFromApi, fetchMessages, markMessagesAsRead]);
 
-  // Effet pour défiler vers le bas après chargement ou ajout de messages
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Suppression de l'effet qui défilement automatiquement vers le bas
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
 
   // Effet pour ajuster la hauteur du textarea
   useEffect(() => {
@@ -562,110 +646,245 @@ const MessageChat = () => {
   const recipientDisplayName = useCachedDisplayName(recipient, getDisplayName);
 
   // Fonction pour créer les bulles de messages
-  const renderMessages = () => {
-    if (messages.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full py-12">
-          <div className="w-20 h-20 rounded-full bg-amber-200 flex items-center justify-center mb-4 animate-pulse">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <p className="text-amber-700 font-medium text-lg mb-2">Commencez la conversation</p>
-          <p className="text-amber-500 text-sm text-center max-w-xs">
-            Envoyez votre premier message à {recipientDisplayName} pour démarrer une discussion
-          </p>
-        </div>
-      );
-    }
-    
-    const groupedMessages = groupMessagesByDate(messages);
-    
-    return Object.entries(groupedMessages).map(([date, dayMessages]) => (
-      <div key={date} className="message-group">
-        <div className="date-separator flex items-center justify-center my-4">
-          <div className="h-px bg-amber-200 flex-grow"></div>
-          <span className="mx-4 px-4 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full shadow-sm">{date}</span>
-          <div className="h-px bg-amber-200 flex-grow"></div>
-        </div>
+  // const renderMessages = () => {
+  //   if (messages.length === 0) {
+  //     return (
         
-        {dayMessages.map((message, index) => {
-          // Déterminer si le message est de l'utilisateur courant
-          const senderId = message.senderId?._id || (typeof message.senderId === 'string' ? message.senderId : null);
-          const isCurrentUser = senderId === currentUserId;
+  //       <div className="flex flex-col items-center justify-center h-full py-12">
+  //         <div className="w-20 h-20 rounded-full bg-amber-200 flex items-center justify-center mb-4 animate-pulse">
+  //           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+  //             <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+  //           </svg>
+  //         </div>
+  //         <p className="text-amber-700 font-medium text-lg mb-2">Commencez la conversation</p>
+  //         <p className="text-amber-500 text-sm text-center max-w-xs">
+  //           Envoyez votre premier message à {recipientDisplayName} pour démarrer une discussion
+  //         </p>
+  //       </div>
+  //     );
+  //   }
+    
+  //   const groupedMessages = groupMessagesByDate(messages);
+    
+  //   return Object.entries(groupedMessages).map(([date, dayMessages]) => (
+  //     <div key={date} className="message-group">
+  //       <div className="date-separator flex items-center justify-center my-4">
+  //         <div className="h-px bg-amber-200 flex-grow"></div>
+  //         <span className="mx-4 px-4 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full shadow-sm">{date}</span>
+  //         <div className="h-px bg-amber-200 flex-grow"></div>
+  //       </div>
+        
+  //       {dayMessages.map((message, index) => {
+  //         // Déterminer si le message est de l'utilisateur courant
+  //         const senderId = message.senderId?._id || (typeof message.senderId === 'string' ? message.senderId : null);
+  //         const isCurrentUser = senderId === currentUserId;
           
-          // Afficher l'avatar seulement pour les nouveaux messages d'un expéditeur
-          const showAvatar = !isCurrentUser && (
-            index === 0 || 
-            dayMessages[index - 1]?.senderId?._id !== senderId
-          );
+  //         // Afficher l'avatar seulement pour les nouveaux messages d'un expéditeur
+  //         const showAvatar = !isCurrentUser && (
+  //           index === 0 || 
+  //           dayMessages[index - 1]?.senderId?._id !== senderId
+  //         );
           
-          return (
-            <div key={message._id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-3`}>
-              {/* Avatar de l'expéditeur (seulement pour les messages reçus) */}
-              {!isCurrentUser && showAvatar && (
-                <div className="flex-shrink-0 mr-2 self-end mb-1">
-                  <div className="w-8 h-8 rounded-full overflow-hidden">
-                    <img 
-                      src={getAvatarUrl(message.senderId)} 
-                      // alt={`Avatar de ${getCachedDisplayName(message.senderId)}`}
-                      alt={`Avatar de ${nameCache[message.senderId._id] || message.senderId.name || 'Utilisateur'}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {e.target.onerror = null; e.target.src = '/default-avatar.png';}}
-                    />
-                  </div>
+  //         return (
+  //           <div key={message._id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-3`}>
+  //             {/* Avatar de l'expéditeur (seulement pour les messages reçus) */}
+  //             {!isCurrentUser && showAvatar && (
+  //               <div className="flex-shrink-0 mr-2 self-end mb-1">
+  //                 <div className="w-8 h-8 rounded-full overflow-hidden">
+  //                   <img 
+  //                     src={getAvatarUrl(message.senderId)} 
+  //                     // alt={`Avatar de ${getCachedDisplayName(message.senderId)}`}
+  //                     alt={`Avatar de ${nameCache[message.senderId._id] || message.senderId.name || 'Utilisateur'}`}
+  //                     className="w-full h-full object-cover"
+  //                     onError={(e) => {e.target.onerror = null; e.target.src = '/default-avatar.png';}}
+  //                   />
+  //                 </div>
+  //               </div>
+  //             )}
+              
+  //             {/* Contenu du message */}
+  //             <div 
+  //               className={`group relative max-w-[75%] p-3 rounded-2xl ${
+  //                 isCurrentUser 
+  //                   ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-br-none shadow-lg shadow-amber-100 animate-fadeInRight' 
+  //                   : 'bg-white text-gray-800 rounded-bl-none border border-amber-100 shadow-md animate-fadeInLeft'
+  //               }`}
+  //             >
+  //               <p className="mb-1 break-words">{message.content}</p>
+  //               <div className={`flex items-center text-xs ${isCurrentUser ? 'text-amber-100' : 'text-amber-500'} justify-end`}>
+  //                 <span className="message-time">
+  //                   {formatMessageDate(message.createdAt)}
+  //                 </span>
+                  
+  //                 {/* Indicateur de statut pour l'envoyeur */}
+  //                 {isCurrentUser && (
+  //                   <span className="ml-1 flex items-center">
+  //                     {message.read ? (
+  //                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  //                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  //                       </svg>
+  //                     ) : (
+  //                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  //                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7 7 7-7" />
+  //                       </svg>
+  //                     )}
+  //                   </span>
+  //                 )}
+  //               </div>
+              
+  //               {/* Bouton de suppression qui apparaît au survol */}
+  //               {isCurrentUser && (
+  //                 <button 
+  //                   onClick={(e) => handleDeleteMessage(message._id, e)} 
+  //                   className="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full p-1.5 shadow-lg transform hover:scale-110 transition-all duration-200"
+  //                   aria-label="Supprimer le message"
+  //                 >
+  //                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  //                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  //                   </svg>
+  //                 </button>
+  //               )}
+  //             </div>
+  //           </div>
+  //         );
+  //       })}
+  //     </div>
+  //   ));
+  // };
+  // Fonction pour créer les bulles de messages avec prise en charge de la recherche
+const renderMessages = () => {
+  if (messages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-12">
+        <div className="w-20 h-20 rounded-full bg-amber-200 flex items-center justify-center mb-4 animate-pulse">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <p className="text-amber-700 font-medium text-lg mb-2">Commencez la conversation</p>
+        <p className="text-amber-500 text-sm text-center max-w-xs">
+          Envoyez votre premier message à {recipientDisplayName} pour démarrer une discussion
+        </p>
+      </div>
+    );
+  }
+  
+  const groupedMessages = groupMessagesByDate(messages);
+  
+  return Object.entries(groupedMessages).map(([date, dayMessages]) => (
+    <div key={date} className="message-group">
+      <div className="date-separator flex items-center justify-center my-4">
+        <div className="h-px bg-amber-200 flex-grow"></div>
+        <span className="mx-4 px-4 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full shadow-sm">{date}</span>
+        <div className="h-px bg-amber-200 flex-grow"></div>
+      </div>
+      
+      {dayMessages.map((message, index) => {
+        // Déterminer si le message est de l'utilisateur courant
+        const senderId = message.senderId?._id || (typeof message.senderId === 'string' ? message.senderId : null);
+        const isCurrentUser = senderId === currentUserId;
+        
+        // Afficher l'avatar seulement pour les nouveaux messages d'un expéditeur
+        const showAvatar = !isCurrentUser && (
+          index === 0 || 
+          dayMessages[index - 1]?.senderId?._id !== senderId
+        );
+        
+        // Vérifier si ce message correspond à la recherche
+        const isSearchMatch = searchQuery && message.content.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // ID unique pour chaque message pour le défilement et la mise en évidence
+        const messageElementId = `message-${message._id}`;
+        
+        // Classes de mise en évidence pour les résultats de recherche
+        const highlightClass = isSearchMatch ? 'border-amber-400 border-2' : '';
+        
+        // Classes pour les résultats de recherche actuellement sélectionnés
+        const currentResultClass = searchResults.length > 0 && 
+                                  searchResults[currentResultIndex]?._id === message._id ? 
+                                  'ring-4 ring-amber-500' : '';
+        
+        return (
+          <div 
+            id={messageElementId}
+            key={message._id} 
+            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-3 ${highlightClass} ${currentResultClass}`}
+          >
+            {/* Avatar de l'expéditeur (seulement pour les messages reçus) */}
+            {!isCurrentUser && showAvatar && (
+              <div className="flex-shrink-0 mr-2 self-end mb-1">
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  <img 
+                    src={getAvatarUrl(message.senderId)} 
+                    alt={`Avatar de ${nameCache[message.senderId._id] || message.senderId.name || 'Utilisateur'}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {e.target.onerror = null; e.target.src = '/default-avatar.png';}}
+                  />
                 </div>
+              </div>
+            )}
+            
+            {/* Contenu du message */}
+            <div 
+              className={`group relative max-w-[75%] p-3 rounded-2xl ${
+                isCurrentUser 
+                  ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-br-none shadow-lg shadow-amber-100 animate-fadeInRight' 
+                  : 'bg-white text-gray-800 rounded-bl-none border border-amber-100 shadow-md animate-fadeInLeft'
+              }`}
+            >
+              {/* Si le message correspond à la recherche, mettre en évidence le texte correspondant */}
+              {isSearchMatch && searchQuery ? (
+                <p className="mb-1 break-words">
+                  {message.content.split(new RegExp(`(${searchQuery})`, 'gi')).map((part, i) => 
+                    part.toLowerCase() === searchQuery.toLowerCase() ? 
+                      <mark key={i} className="bg-amber-200 text-amber-900 px-1 rounded">{part}</mark> : 
+                      part
+                  )}
+                </p>
+              ) : (
+                <p className="mb-1 break-words">{message.content}</p>
               )}
               
-              {/* Contenu du message */}
-              <div 
-                className={`group relative max-w-[75%] p-3 rounded-2xl ${
-                  isCurrentUser 
-                    ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-br-none shadow-lg shadow-amber-100 animate-fadeInRight' 
-                    : 'bg-white text-gray-800 rounded-bl-none border border-amber-100 shadow-md animate-fadeInLeft'
-                }`}
-              >
-                <p className="mb-1 break-words">{message.content}</p>
-                <div className={`flex items-center text-xs ${isCurrentUser ? 'text-amber-100' : 'text-amber-500'} justify-end`}>
-                  <span className="message-time">
-                    {formatMessageDate(message.createdAt)}
-                  </span>
-                  
-                  {/* Indicateur de statut pour l'envoyeur */}
-                  {isCurrentUser && (
-                    <span className="ml-1 flex items-center">
-                      {message.read ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7 7 7-7" />
-                        </svg>
-                      )}
-                    </span>
-                  )}
-                </div>
-              
-                {/* Bouton de suppression qui apparaît au survol */}
+              <div className={`flex items-center text-xs ${isCurrentUser ? 'text-amber-100' : 'text-amber-500'} justify-end`}>
+                <span className="message-time">
+                  {formatMessageDate(message.createdAt)}
+                </span>
+                
+                {/* Indicateur de statut pour l'envoyeur */}
                 {isCurrentUser && (
-                  <button 
-                    onClick={(e) => handleDeleteMessage(message._id, e)} 
-                    className="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full p-1.5 shadow-lg transform hover:scale-110 transition-all duration-200"
-                    aria-label="Supprimer le message"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                  <span className="ml-1 flex items-center">
+                    {message.read ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7 7 7-7" />
+                      </svg>
+                    )}
+                  </span>
                 )}
               </div>
+            
+              {/* Bouton de suppression qui apparaît au survol */}
+              {isCurrentUser && (
+                <button 
+                  onClick={(e) => handleDeleteMessage(message._id, e)} 
+                  className="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full p-1.5 shadow-lg transform hover:scale-110 transition-all duration-200"
+                  aria-label="Supprimer le message"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
-          );
-        })}
-      </div>
-    ));
-  };
+          </div>
+        );
+      })}
+    </div>
+  ));
+};
 
   // Afficher le loader pendant le chargement
   if (loading) return (
@@ -748,6 +967,7 @@ const MessageChat = () => {
                   {recipient.isOnline ? "En ligne" : "Hors ligne"}
                 </p>
               </div>
+ 
             </div>
           )}
         </div>
@@ -761,32 +981,39 @@ const MessageChat = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
             </svg>
           </button>
+ 
 
           {showOptions && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl z-20 overflow-hidden border border-amber-100 animate-fadeIn">
-              <div className="py-1">
-                <button className="flex items-center w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Rechercher dans la conversation
-                </button>
-                <button className="flex items-center w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Supprimer la conversation
-                </button>
-                <div className="border-t border-amber-100 my-1"></div>
-                <button className="flex items-center w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                  </svg>
-                  Bloquer l'utilisateur
-                </button>
-              </div>
-            </div>
-          )}
+  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl z-20 overflow-hidden border border-amber-100 animate-fadeIn">
+    <div className="py-1">
+      <button 
+        onClick={toggleSearch}
+        className="flex items-center w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        Rechercher dans la conversation
+      </button>
+      <button 
+        onClick={handleDeleteConversation}
+        className="flex items-center w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Supprimer la conversation
+      </button>
+      <div className="border-t border-amber-100 my-1"></div>
+      <button className="flex items-center w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        Bloquer l'utilisateur
+      </button>
+    </div>
+  </div>
+)}
         </div>
       </div>
 
@@ -798,6 +1025,67 @@ const MessageChat = () => {
           backgroundSize: '12px 12px'
         }}
       >
+        {/* Barre de recherche */}
+        {isSearching && (
+          <div className="sticky top-0 max-w-3xl mx-auto bg-white rounded-lg shadow-md mb-4 flex items-center p-2 z-10 animate-fadeIn">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher dans la conversation..."
+              className="flex-grow p-2 text-gray-700 focus:outline-none"
+              autoFocus
+            />
+            <div className="flex-shrink-0 flex items-center">
+              {searchResults.length > 0 && (
+                <div className="flex items-center mr-2 text-sm text-gray-500">
+                  <button 
+                    onClick={() => {
+                      const newIndex = currentResultIndex > 0 ? currentResultIndex - 1 : searchResults.length - 1;
+                      setCurrentResultIndex(newIndex);
+                      scrollToMessage(searchResults[newIndex]._id);
+                    }}
+                    className="p-1 hover:bg-amber-100 rounded-full mr-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                  </button>
+                  <span>{currentResultIndex + 1}/{searchResults.length}</span>
+                  <button 
+                    onClick={() => {
+                      const newIndex = currentResultIndex < searchResults.length - 1 ? currentResultIndex + 1 : 0;
+                      setCurrentResultIndex(newIndex);
+                      scrollToMessage(searchResults[newIndex]._id);
+                    }}
+                    className="p-1 hover:bg-amber-100 rounded-full ml-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              <button 
+                onClick={handleSearch}
+                className="p-2 text-amber-600 hover:text-amber-800 transition-colors rounded-full hover:bg-amber-100"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              <button 
+                onClick={toggleSearch}
+                className="p-2 text-gray-500 hover:text-gray-700 transition-colors rounded-full hover:bg-amber-100 ml-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-3xl mx-auto">
           {renderMessages()}
           <div ref={messagesEndRef} />
@@ -848,7 +1136,6 @@ const MessageChat = () => {
     </div>
   );
 };
-
 
 export default MessageChat;
 

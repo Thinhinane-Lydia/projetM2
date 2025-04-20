@@ -6,12 +6,15 @@ const orderSchema = new mongoose.Schema({
     {
       product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
     
-      price: { type: Number, required: true }
+      price: { type: Number, required: true },
+      seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+
     }
   ],
   total: { type: Number, required: true },
   shippingAddress: { type: String, required: true },
   status: { type: String, default: 'En traitement' },
+ 
   createdAt: { type: Date, default: Date.now }
 });
 

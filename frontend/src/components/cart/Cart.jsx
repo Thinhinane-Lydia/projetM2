@@ -1,5 +1,3 @@
-
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
@@ -76,3 +74,4 @@ export const CartProvider = ({ children }) => {
 export const useCart = () => {
   return useContext(CartContext);
 };
+

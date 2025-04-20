@@ -262,7 +262,7 @@ export const logout = async () => {
  */
 export const updateUserProfile = async (profileData) => {
   try {
-    // Vérifier que profileData est un FormData
+    // Vérifier que profileData est bien un FormData
     if (!(profileData instanceof FormData)) {
       console.error("❌ updateUserProfile: profileData n'est pas un FormData");
       return { success: false, message: "Format de données incorrect" };
@@ -276,7 +276,7 @@ export const updateUserProfile = async (profileData) => {
 
     const response = await api.put("/user/update-profile", profileData, {
       headers: { 
-        "Content-Type": "multipart/form-data" 
+        "Content-Type": "multipart/form-data" // Crucial pour l'envoi de fichiers
       }
     });
 
@@ -289,6 +289,7 @@ export const updateUserProfile = async (profileData) => {
     );
   }
 };
+
 
 // COMMENTAIRES
 /**
@@ -760,14 +761,25 @@ export const sendMessage = async (conversationId, text, recipientId) => {
 /**
  * ✅ Rechercher des utilisateurs
  */
+// export const searchUsers = async (query) => {
+//   try {
+//     const response = await api.get(`/user/search?query=${encodeURIComponent(query)}`);
+//     return response.data;
+//   } catch (error) {
+//     return handleApiError(error, { success: false, data: [] }, "Erreur lors de la recherche d'utilisateurs");
+//   }
+// };
+// Fonction pour rechercher des utilisateurs
 export const searchUsers = async (query) => {
   try {
     const response = await api.get(`/user/search?query=${encodeURIComponent(query)}`);
     return response.data;
   } catch (error) {
+    console.error("❌ Erreur lors de la recherche d'utilisateurs:", error);
     return handleApiError(error, { success: false, data: [] }, "Erreur lors de la recherche d'utilisateurs");
   }
 };
+
 export const checkout = async (shippingAddress) => {
   try {
     const response = await axios.post(
@@ -854,5 +866,69 @@ export const deleteSearchHistoryItem = async (productId) => {
   }
 };
 
+/**
+ * Récupère les commandes de l'utilisateur connecté
+ * @returns {Array} Liste des commandes avec les détails des produits incluant les images
+ */
+export const fetchUserOrders = async () => {
+  try {
+    // Utiliser le bon chemin d'API
+    const response = await api.get("/order/user-orders");
+    console.log("API response for orders:", response.data);
+    
+    // Vérifier la structure de la réponse
+    if (response.data && response.data.success) {
+      return response.data.orders || [];
+    }
+    
+    // Si la structure est différente
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error("Erreur détaillée lors de la récupération des commandes:", error.response || error);
+    return [];
+  }
+};
+
+/**
+ * ✅ Supprimer une conversation
+ */
+export const deleteConversation = async (conversationId) => {
+  try {
+    const response = await api.delete(`/conversations/${conversationId}`);
+    return response.data;
+  } catch (error) {
+    return handleApiError(
+      error,
+      { success: false, message: "Erreur lors de la suppression de la conversation" },
+      "❌ Erreur deleteConversation"
+    );
+  }
+};
+/**
+ * ✅ Récupérer toutes les commandes (pour l'admin)
+ */
+export const fetchAllOrders = async () => {
+  try {
+    const response = await api.get("/order/all");
+    return response.data;
+  } catch (error) {
+    return handleApiError(error, { orders: [] }, "❌ Erreur fetchAllOrders");
+  }
+};
+
+// Fonction pour mettre à jour le statut de la commande
+export const updateOrderStatus = async (orderId, status) => {
+  try {
+    const response = await axios.put(`/api/v2/orders/update-status/${orderId}`, { status }, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}` // Assurez-vous que le token est présent
+      }
+    });
+
+    console.log("Réponse de la mise à jour de statut:", response.data);
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du statut de la commande:", error);
+  }
+};
 
 export default api;

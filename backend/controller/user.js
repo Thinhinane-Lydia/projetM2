@@ -321,4 +321,32 @@ router.delete("/delete-user/:userId", isAuthenticated, isAdmin, async (req, res,
     }
   });
 
+
+  router.put("/update-profile", isAuthenticated, async (req, res, next) => {
+    try {
+      const { name, phoneNumber, address, avatar } = req.body;
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "Utilisateur introuvable" });
+      }
+  
+      // Ne pas permettre la modification de l'email
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user.id,
+        { 
+          name: name || user.name,
+          phoneNumber: phoneNumber || user.phoneNumber,
+          address: addresses || user.addresses,
+          avatar: avatar || user.avatar, // Assurez-vous de gérer l'avatar de manière appropriée
+        },
+        { new: true }
+      );
+      res.status(200).json({ success: true, user: updatedUser });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+
+  
 module.exports = router;

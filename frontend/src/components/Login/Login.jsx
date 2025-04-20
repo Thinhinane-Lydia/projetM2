@@ -7,7 +7,7 @@ import { server } from "../../server.js";
 import { toast } from "react-toastify";
 import { AiOutlineCheckCircle, AiOutlineUser, AiOutlineLock } from "react-icons/ai";
 
-const Login = () => {
+const Login = () =>{
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

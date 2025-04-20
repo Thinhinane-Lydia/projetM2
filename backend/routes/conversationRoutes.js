@@ -7,5 +7,5 @@ router.get('/', isAuthenticated, conversationController.getUserConversations);  
 router.get('/:id', isAuthenticated, conversationController.getConversationById); // Récupérer une conversation spécifique
 router.post('/start', isAuthenticated, conversationController.startConversation);  // Démarrer une nouvelle conversation
 
-
+router.get('/search', isAuthenticated, conversationController.searchUsers);
 module.exports = router;

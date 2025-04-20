@@ -56,7 +56,7 @@ exports.getUserConversations = async (req, res) => {
  * @route POST /api/v2/conversations/start
  */
 
-// exports.startConversation = async (req, res) => {
+
 //     const { userId } = req.body;
 //     const currentUserId = req.user._id;
 
@@ -121,6 +121,7 @@ exports.getUserConversations = async (req, res) => {
 //         });
 //     }
 // };
+
 exports.startConversation = async (req, res) => {
   const { userId } = req.body;
   const currentUserId = req.user._id;
@@ -197,7 +198,7 @@ exports.getConversationById = async (req, res) => {
     }
 
     const conversation = await Conversation.findById(id)
-      .populate('participants', 'username firstName lastName avatar isOnline');
+      .populate('participants', 'name username firstName lastName avatar isOnline');
 
     if (!conversation) {
       return res.status(404).json({
@@ -226,3 +227,63 @@ exports.getConversationById = async (req, res) => {
     });
   }
 };
+
+// Fonction de recherche d'utilisateurs
+exports.searchUsers = async (req, res) => {
+  const { query } = req.query;
+
+  if (!query || query.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "La requête de recherche est vide",
+    });
+  }
+
+  try {
+    // Recherche d'utilisateurs dont le nom ou le prénom correspond à la requête
+    const users = await User.find({
+      $or: [
+        { name: new RegExp(query, 'i') },
+        { firstName: new RegExp(query, 'i') },
+        { lastName: new RegExp(query, 'i') },
+      ]
+    })
+      .select("name firstName lastName avatar email _id")  // Sélectionner les champs nécessaires
+      .limit(10);  // Limiter à 10 résultats maximum
+
+    return res.status(200).json({
+      success: true,
+      data: users,
+    });
+  } catch (error) {
+    console.error("❌ Erreur lors de la recherche d'utilisateurs:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur lors de la recherche d'utilisateurs",
+    });
+  }
+};
+exports.sendMessage = async (req, res) => {
+  const senderId = req.user._id;
+  const receiverId = req.body.receiverId;
+
+  // Vérifier si l'utilisateur est bloqué
+  const sender = await User.findById(senderId);
+  if (sender.blockedUsers.includes(receiverId)) {
+    return res.status(403).json({
+      success: false,
+      message: "Vous avez bloqué cet utilisateur, vous ne pouvez pas lui envoyer de message"
+    });
+  }
+
+  // Créer et envoyer le message
+  const message = new Message({
+    sender: senderId,
+    receiver: receiverId,
+    content: req.body.content
+  });
+
+  await message.save();
+  res.status(200).json({ success: true, message: 'Message envoyé avec succès' });
+};
+

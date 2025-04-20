@@ -272,29 +272,7 @@ router.get("/all", isAuthenticated, isAdmin, catchAsyncError(async (req, res, ne
         userCount: users.length
     });
 }));
-//supprimer un utilisateur par un admin 
-  
-// router.delete("/delete-user/:userId", isAuthenticated, isAdmin, async (req, res, next) => {
-//     try {
-//       const { userId } = req.params;
-  
-//       // Recherche de l'utilisateur à supprimer
-//       const userToDelete = await User.findById(userId);
-//       if (!userToDelete) {
-//         return res.status(404).json({ success: false, message: "Utilisateur non trouvé." });
-//       }
-  
-//       // Suppression de l'utilisateur
-//       await User.deleteOne({ _id: userId });
-  
-//       res.status(200).json({
-//         success: true,
-//         message: "Utilisateur supprimé avec succès.",
-//       });
-//     } catch (error) {
-//       next(error);
-//     }
-//   });
+
   
 router.delete("/delete-user/:userId", isAuthenticated, isAdmin, async (req, res, next) => {
     try {
@@ -323,6 +301,34 @@ router.delete("/delete-user/:userId", isAuthenticated, isAdmin, async (req, res,
       next(error);
     }
   });
+
+
+
+  router.put("/update-profile", isAuthenticated, async (req, res, next) => {
+    try {
+      const { name, phoneNumber, address, avatar } = req.body;
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "Utilisateur introuvable" });
+      }
+  
+      // Ne pas permettre la modification de l'email
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user.id,
+        { 
+          name: name || user.name,
+          phoneNumber: phoneNumber || user.phoneNumber,
+          address: addresses || user.addresses,
+          avatar: avatar || user.avatar, // Assurez-vous de gérer l'avatar de manière appropriée
+        },
+        { new: true }
+      );
+      res.status(200).json({ success: true, user: updatedUser });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
 
   
 

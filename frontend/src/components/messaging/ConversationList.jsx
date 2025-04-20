@@ -78,47 +78,88 @@ const ConversationsList = () => {
     return () => clearInterval(interval);
   }, [fetchConversations]);
 
-  // Fonction pour rechercher un utilisateur
-  const handleSearchUser = useCallback(async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  // // Fonction pour rechercher un utilisateur
+  // const handleSearchUser = useCallback(async () => {
+  //   if (!searchQuery.trim()) {
+  //     setSearchResults([]);
+  //     return;
+  //   }
   
-    try {
-      setIsSearching(true);
-      const response = await searchUsers(searchQuery);
+  //   try {
+  //     setIsSearching(true);
+  //     const response = await searchUsers(searchQuery);
       
-      if (response.success) {
-        // Filtrer l'utilisateur actuel des résultats
-        const filteredResults = response.data.filter(
-          user => user._id !== currentUserId
-        );
-        // Afficher les résultats pour le débogage
-        console.log("Résultats de recherche:", filteredResults);
-        setSearchResults(filteredResults);
-      } else {
-        console.error("❌ Échec de la recherche:", response.message);
-      }
-    } catch (error) {
-      console.error("❌ Erreur lors de la recherche :", error);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [searchQuery, currentUserId]);
+  //     if (response.success) {
+  //       // Filtrer l'utilisateur actuel des résultats
+  //       const filteredResults = response.data.filter(
+  //         user => user._id !== currentUserId
+  //       );
+  //       // Afficher les résultats pour le débogage
+  //       console.log("Résultats de recherche:", filteredResults);
+  //       setSearchResults(filteredResults);
+  //     } else {
+  //       console.error("❌ Échec de la recherche:", response.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("❌ Erreur lors de la recherche :", error);
+  //   } finally {
+  //     setIsSearching(false);
+  //   }
+  // }, [searchQuery, currentUserId]);
 
-  // Effet pour la recherche avec délai (debounce)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery.trim()) {
-        handleSearchUser();
-      } else {
-        setSearchResults([]);
-      }
-    }, 300); // 300ms de délai pour une réactivité améliorée
+  // Fonction de recherche d'utilisateurs
+const handleSearchUser = useCallback(async () => {
+  if (!searchQuery.trim()) {
+    setSearchResults([]);
+    return;
+  }
+
+  try {
+    setIsSearching(true);
+    const response = await searchUsers(searchQuery);  // Appel à la fonction searchUsers
+
+    if (response.success) {
+      // Filtrer les résultats pour exclure l'utilisateur actuel
+      const filteredResults = response.data.filter(
+        (user) => user._id !== currentUserId
+      );
+      setSearchResults(filteredResults);  // Mettre à jour les résultats
+    } else {
+      console.error("❌ Échec de la recherche:", response.message);
+    }
+  } catch (error) {
+    console.error("❌ Erreur lors de la recherche:", error);
+  } finally {
+    setIsSearching(false);
+  }
+}, [searchQuery, currentUserId]);
+
+// Effet pour gérer la recherche avec un délai (debounce)
+useEffect(() => {
+  const timeoutId = setTimeout(() => {
+    if (searchQuery.trim()) {
+      handleSearchUser();  // Déclencher la recherche
+    } else {
+      setSearchResults([]);  // Réinitialiser les résultats si la recherche est vide
+    }
+  }, 300);  // Délai de 300ms pour une recherche réactive
+
+  return () => clearTimeout(timeoutId);  // Nettoyage de l'effet
+}, [searchQuery, handleSearchUser]);
+
+
+  // // Effet pour la recherche avec délai (debounce)
+  // useEffect(() => {
+  //   const timeoutId = setTimeout(() => {
+  //     if (searchQuery.trim()) {
+  //       handleSearchUser();
+  //     } else {
+  //       setSearchResults([]);
+  //     }
+  //   }, 300); // 300ms de délai pour une réactivité améliorée
     
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, handleSearchUser]);
+  //   return () => clearTimeout(timeoutId);
+  // }, [searchQuery, handleSearchUser]);
 
 
   // Fonction améliorée pour obtenir le nom d'affichage
@@ -273,28 +314,63 @@ const ConversationsList = () => {
   }, [currentUserId]);
 
   // Fonction pour démarrer une conversation
+  // const startConversation = async (userId) => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       navigate('/login');
+  //       return;
+  //     }
+      
+  //     setLoading(true);
+  //     const response = await axios.post(
+  //       `${API_BASE_URL}/conversations/start`,
+  //       { userId },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //         withCredentials: true,
+  //       }
+  //     );
+  
+  //     if (response.data.success) {
+  //       setSearchQuery('');
+  //       setSearchResults([]);
+  //       navigate(`/messages/${response.data.conversationId}`);
+  //     } else {
+  //       throw new Error(response.data.message || "Erreur lors de la création de la conversation");
+  //     }
+  //   } catch (error) {
+  //     console.error("❌ Erreur lors du démarrage de la conversation:", error);
+  //     setError(`Erreur: ${error.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const startConversation = async (userId) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        navigate('/login');
+        navigate("/login");
         return;
       }
-      
+  
       setLoading(true);
       const response = await axios.post(
         `${API_BASE_URL}/conversations/start`,
-        { userId },
+        { receiverId: userId },  // Assurez-vous que l'ID du destinataire est bien passé
         {
           headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         }
       );
   
+      // Vérification de la réponse de l'API
+      console.log("Réponse de l'API pour démarrer la conversation:", response.data);
+  
       if (response.data.success) {
-        setSearchQuery('');
-        setSearchResults([]);
-        navigate(`/messages/${response.data.conversationId}`);
+        setSearchQuery('');  // Réinitialiser la recherche
+        setSearchResults([]);  // Réinitialiser les résultats
+        navigate(`/messages/${response.data.conversationId}`);  // Rediriger vers la nouvelle conversation
       } else {
         throw new Error(response.data.message || "Erreur lors de la création de la conversation");
       }
@@ -305,7 +381,7 @@ const ConversationsList = () => {
       setLoading(false);
     }
   };
-
+  
 
   
   // Formatter la date du dernier message

@@ -8,8 +8,8 @@ const { isAuthenticated } = require('../middleware/auth');
 // ✅ Récupérer les messages d'une conversation
 router.get('/conversation/:conversationId', isAuthenticated, messageController.getConversationMessages);
 
-// router.put('/:messageId/read', isAuthenticated, messageController.markMessageAsRead); // Marquer un message comme lu
-router.put('/read/:conversationId', isAuthenticated, messageController.markAsRead);
+router.put('/:messageId/read', isAuthenticated, messageController.markMessageAsRead); // Marquer un message comme lu
+
 // ✅ Envoyer un message
 router.post("/", isAuthenticated, async (req, res) => {
     try {
@@ -49,5 +49,7 @@ router.post("/", isAuthenticated, async (req, res) => {
 // ✅ Supprimer un message
 router.delete('/:messageId', isAuthenticated, messageController.deleteMessageForUser);
 
+// Supprimer une conversation
+router.delete('/conversation/:conversationId', isAuthenticated, messageController.deleteConversation);
 
 module.exports = router;

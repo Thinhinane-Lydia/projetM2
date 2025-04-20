@@ -14,6 +14,12 @@ const productSchema = new mongoose.Schema({
   condition: { type: String, required: true, enum: ["Neuf", "Bon état", "Usé"] },
   images: [{ url: { type: String, required: true } }],
   seller: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  etat: {
+    type: String,
+    enum: ["disponible", "vendu","reçu"],
+    default: "disponible"
+  }
+,
   createdAt: { type: Date, default: Date.now },
   
 });

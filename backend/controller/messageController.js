@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Message = require('../model/Message');
 const Conversation = require('../model/Conversation');
-
+const user = require('../model/user');
 /**
  * Valide un ID MongoDB
  * @param {string} id - ID à valider
@@ -57,7 +57,7 @@ exports.getConversationMessages = async (req, res) => {
     })
     .sort({ createdAt: 1 })
     .populate('senderId', 'name username email avatar')
-    .populate("receiverId", "name username email avatar")
+    .populate("receiverId", 'name username email avatar')
     .sort({ createdAt: 1 });
 
     // Marquer les messages non lus comme lus
@@ -91,6 +91,11 @@ exports.sendMessage = async (req, res) => {
   try {
     const { conversationId, text, recipientId } = req.body;
     const senderId = req.user._id;
+      // Vérifier si le destinataire est bloqué
+  const sender = await User.findById(senderId);
+  if (sender.blockedUsers.includes(recipientId)) {
+    return res.status(403).json({ success: false, message: 'Vous avez bloqué cet utilisateur' });
+  }
     
     // Validations
     if (!text || text.trim() === '') {
@@ -154,10 +159,12 @@ exports.sendMessage = async (req, res) => {
     console.error("❌ Erreur lors de l'envoi du message:", error);
     return res.status(500).json({
       success: false,
-      message: 'Erreur serveur'
+      message: 'Erreur serveur',
+      error: error.message 
     }); 
   }
 };
+
 
 /**
  * Supprime un message
@@ -339,142 +346,45 @@ exports.markMessageAsRead = async (req, res) => {
   }
 };
 
-exports.markAsRead = async (req, res) => {
+
+
+exports.deleteConversation = async (req, res) => {
   try {
-    const { conversationId } = req.params;  // Récupérer l'ID de la conversation
-    const currentUserId = req.user.id;  // ID de l'utilisateur connecté
+    const { conversationId } = req.params; // Récupérer l'ID de la conversation à partir de l'URL
+    const userId = req.user._id; // L'utilisateur actuel
 
-    // Vérifier si la conversation existe
-    const conversation = await Conversation.findById(conversationId);
-    if (!conversation) {
-      return res.status(404).json({ success: false, message: 'Conversation non trouvée' });
-    }
-
-    // Vérifier si l'utilisateur est un participant de la conversation
-    const isParticipant = conversation.participants.some(participant => 
-      participant.toString() === currentUserId || 
-      (participant.user && participant.user.toString() === currentUserId)
-    );
-
-    if (!isParticipant) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Vous n\'êtes pas autorisé à accéder à cette conversation' 
-      });
-    }
-
-    // Marquer tous les messages non lus de cette conversation comme lus
-    const result = await Message.updateMany(
-      { 
-        conversation: conversationId,
-        recipientId: currentUserId,
-        read: false
-      },
-      { $set: { read: true } }
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: 'Messages marqués comme lus',
-      data: { modifiedCount: result.modifiedCount }
-    });
-  } catch (error) {
-    console.error('Erreur lors du marquage des messages comme lus:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Erreur lors du marquage des messages comme lus',
-      error: error.message
-    });
-  }
-};
-
-
-// Ajoutez cette fonction dans votre messageController.js
-// Vérification si l'utilisateur est bloqué
-const isBlocked = async (senderId, receiverId) => {
-  const receiver = await User.findById(receiverId);
-  return receiver.blockedUsers && 
-         receiver.blockedUsers.some(id => id.toString() === senderId.toString());
-};
-
-// Modifiez la fonction sendMessage pour vérifier si l'utilisateur est bloqué
-exports.sendMessage = async (req, res) => {
-  try {
-    const { conversationId, text, recipientId } = req.body;
-    const senderId = req.user._id;
-    
-    // Validations
-    if (!text || text.trim() === '') {
-      return res.status(400).json({
-        success: false,
-        message: 'Le message ne peut pas être vide'
-      });
-    }
-    
-    if (!isValidObjectId(conversationId) || !isValidObjectId(recipientId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'IDs de conversation ou destinataire invalides'
-      });
-    }
-    
     // Vérifier si la conversation existe
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
       return res.status(404).json({
         success: false,
-        message: 'Conversation non trouvée'
+        message: 'Conversation non trouvée',
       });
     }
-    
-    // Vérifier si l'expéditeur et le destinataire font partie de la conversation
-    const participantIds = conversation.participants.map(p => p.toString());
-    if (!participantIds.includes(senderId.toString()) || !participantIds.includes(recipientId.toString())) {
+
+    // Vérifier si l'utilisateur est bien un participant de cette conversation
+    if (!conversation.participants.includes(userId)) {
       return res.status(403).json({
         success: false,
-        message: 'Vous n\'êtes pas autorisé à envoyer un message dans cette conversation'
+        message: "Vous n'êtes pas autorisé à supprimer cette conversation",
       });
     }
-    
-    // Vérifier si l'utilisateur est bloqué par le destinataire
-    const blocked = await isBlocked(senderId, recipientId);
-    if (blocked) {
-      return res.status(403).json({
-        success: false,
-        message: 'Vous ne pouvez pas envoyer de message à cet utilisateur car il vous a bloqué'
-      });
-    }
-    
-    // Créer et sauvegarder le message
-    const newMessage = new Message({
-      conversation: conversationId,
-      senderId: senderId,
-      receiverId: recipientId,
-      content: text,
-      read: false
-    });
-    
-    const savedMessage = await newMessage.save();
-    
-    // Mettre à jour le dernier message et la date de mise à jour de la conversation
-    await Conversation.findByIdAndUpdate(conversationId, {
-      lastMessage: savedMessage._id,
-      updatedAt: new Date()
-    });
-    
-    // Peupler les données de l'expéditeur pour la réponse
-    const populatedMessage = await Message.findById(savedMessage._id)
-      .populate('senderId', 'name username firstName lastName avatar');
-    
-    return res.status(201).json({
+
+    // Supprimer tous les messages associés à la conversation
+    await Message.deleteMany({ conversation: conversationId });
+
+    // Supprimer la conversation
+    await Conversation.findByIdAndDelete(conversationId);
+
+    return res.status(200).json({
       success: true,
-      data: populatedMessage
+      message: 'Conversation supprimée avec succès',
     });
   } catch (error) {
-    console.error("❌ Erreur lors de l'envoi du message:", error);
+    console.error('Erreur lors de la suppression de la conversation :', error);
     return res.status(500).json({
       success: false,
-      message: 'Erreur serveur'
-    }); 
+      message: 'Erreur serveur',
+    });
   }
 };

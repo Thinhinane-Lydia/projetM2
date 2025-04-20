@@ -1,4 +1,3 @@
-
 // import React, { useEffect, useState } from "react";
 // import { useNavigate } from "react-router-dom";
 // import { fetchUser, fetchUserProducts, deleteProduct } from "../../utils/api";
@@ -49,7 +48,8 @@
 //         }
 //     }, [searchTerm, products]);
 
-//     const handleDelete = async (productId) => {
+//     const handleDelete = async (e, productId) => {
+//         e.stopPropagation(); // Empêcher la navigation lors du clic sur le bouton supprimer
 //         if (!window.confirm("Voulez-vous vraiment supprimer ce produit ?")) return;
 
 //         const response = await deleteProduct(productId);
@@ -63,6 +63,17 @@
 //         } else {
 //             alert("Erreur lors de la suppression du produit !");
 //         }
+//     };
+
+//     // Navigation vers la page de détail du produit
+//     const handleProductClick = (productId) => {
+//         navigate(`/InfoProduct/${productId}`);
+//     };
+
+//     // Navigation vers la page d'édition du produit
+//     const handleEditClick = (e, productId) => {
+//         e.stopPropagation(); // Empêcher la navigation vers la page info produit
+//         navigate(`/Sell/${productId}`);
 //     };
 
 //     if (isLoading) {
@@ -106,7 +117,11 @@
 //             ) : (
 //                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 //                     {filteredProducts.map((product) => (
-//                         <div key={product._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-amber-100">
+//                         <div 
+//                             key={product._id} 
+//                             className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-amber-100 cursor-pointer"
+//                             onClick={() => handleProductClick(product._id)}
+//                         >
 //                             <div className="h-48 overflow-hidden relative">
 //                                 <img
 //                                     src={product.images[0]?.url ? `http://localhost:8000/${product.images[0].url}` : "/placeholder-product.png"}
@@ -123,7 +138,7 @@
 //                                     <p className="text-xl font-bold text-amber-700">{product.price} DA</p>
 //                                     <div className="flex space-x-2">
 //                                         <button
-//                                             onClick={() => navigate(`/Sell/${product._id}`)}
+//                                             onClick={(e) => handleEditClick(e, product._id)}
 //                                             className="p-2 bg-blue-100 rounded-lg text-blue-600 hover:bg-blue-200"
 //                                         >
 //                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -131,7 +146,7 @@
 //                                             </svg>
 //                                         </button>
 //                                         <button
-//                                             onClick={() => handleDelete(product._id)}
+//                                             onClick={(e) => handleDelete(e, product._id)}
 //                                             className="p-2 bg-red-100 rounded-lg text-red-600 hover:bg-red-200"
 //                                         >
 //                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -170,10 +185,12 @@ const MaBoutique = ({ searchTerm = "" }) => {
                 
                 if (userResponse.success && userResponse.user) {
                     setUser(userResponse.user);
-                    // Passez l'ID de l'utilisateur pour récupérer ses produits
+                    // Récupérer tous les produits de l'utilisateur
                     const userProducts = await fetchUserProducts(userResponse.user._id);
-                    setProducts(userProducts);
-                    setFilteredProducts(userProducts);
+                    // Filtrer pour ne garder que les produits disponibles
+                    const availableProducts = userProducts.filter(product => product.etat === "disponible");
+                    setProducts(availableProducts);
+                    setFilteredProducts(availableProducts);
                 } else {
                     // Gérer le cas où l'utilisateur n'est pas authentifié
                     navigate("/login"); // Rediriger vers la page de connexion si nécessaire
@@ -229,6 +246,11 @@ const MaBoutique = ({ searchTerm = "" }) => {
         navigate(`/Sell/${productId}`);
     };
 
+    // Navigation vers la page des ventes
+    const navigateToSoldProducts = () => {
+        navigate("/MesVentes");
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center p-8">
@@ -245,14 +267,18 @@ const MaBoutique = ({ searchTerm = "" }) => {
         <div className="max-w-6xl mx-auto p-4">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-amber-800">Ma Boutique</h2>
-                <button
-                    onClick={() => navigate("/Sell")}
-                    className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center" >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    Ajouter un produit
-                </button>
+                <div className="flex space-x-3">
+                   
+                    <button
+                        onClick={() => navigate("/Sell")}
+                        className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center" 
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
+                        Ajouter un produit
+                    </button>
+                </div>
             </div>
 
             {filteredProducts.length === 0 ? (
@@ -261,7 +287,7 @@ const MaBoutique = ({ searchTerm = "" }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
                     <h3 className="mt-4 text-xl font-semibold text-amber-800">
-                        {searchTerm ? "Aucun produit ne correspond à votre recherche" : "Vous n'avez pas encore de produits"}
+                        {searchTerm ? "Aucun produit ne correspond à votre recherche" : "Vous n'avez pas encore de produits disponibles"}
                     </h3>
                     <p className="mt-2 text-gray-600">
                         {searchTerm ? "Essayez avec d'autres termes" : "Commencez à vendre en ajoutant votre premier article"}

@@ -3,7 +3,7 @@ import { fetchProducts, fetchCommentsByProduct, deleteProduct, fetchUser } from 
 import { Edit, Trash2, Search, Eye, ShoppingBag, Star, Shield, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import ProductDetail from '../InfoProduct/ProductDetail'; // Ajustez le chemin selon votre structure
+import ProductPopup from '../Popup/ProductPopup'; // Importer le composant ProductPopup
 
 const ProductList = () => {
   const navigate = useNavigate();
@@ -126,14 +126,16 @@ const ProductList = () => {
         const response = await fetchProducts();
         
         if (response && response.products) {
-          setProducts(response.products);
+          // Filtrer les produits pour n'afficher que ceux disponibles
+          const availableProducts = response.products.filter(product => product.etat !== "vendu");
+          setProducts(availableProducts);
           
           // Récupérer le nombre de commentaires et la moyenne des ratings pour chaque produit
           const commentsData = {};
           const ratingsData = {};
           
           await Promise.all(
-            response.products.map(async (product) => {
+            availableProducts.map(async (product) => {
               try {
                 const comments = await fetchCommentsByProduct(product._id);
                 commentsData[product._id] = comments.length;
@@ -152,14 +154,14 @@ const ProductList = () => {
           setRatings(ratingsData);
           
           // Associer les ratings aux produits
-          const productsWithRatingsData = response.products.map(product => ({
+          const productsWithRatingsData = availableProducts.map(product => ({
             ...product,
             rating: ratingsData[product._id] || 0,
             ratingCount: commentsData[product._id] || 0
           }));
           
           setProductsWithRatings(productsWithRatingsData);
-          console.log("Produits chargés avec évaluations:", productsWithRatingsData.length);
+          console.log("Produits disponibles chargés avec évaluations:", productsWithRatingsData.length);
         } else {
           setError("Format de réponse incorrect");
         }
@@ -241,7 +243,7 @@ const ProductList = () => {
     return isAdmin || (product.seller._id === currentUser._id);
   };
 
-  // Ouvrir la popup de détail produit (pour admin) ou naviguer vers la page de détail (pour utilisateurs)
+  // Ouvrir la popup de détail produit
   const handleViewProduct = (productId) => {
     if (isAdmin) {
       setSelectedProductId(productId);
@@ -259,32 +261,31 @@ const ProductList = () => {
 
   // Gérer la suppression d'un produit depuis la liste
   const handleDelete = async (productId) => {
-    if (confirmDelete === productId) {
-      try {
-        const response = await deleteProduct(productId);
-        if (response && response.success) {
-          setProductsWithRatings(productsWithRatings.filter(product => product._id !== productId));
-          setProducts(products.filter(product => product._id !== productId));
-          toast.success("Produit supprimé avec succès");
-        } else {
-          toast.error(response?.message || "Erreur lors de la suppression");
-        }
-      } catch (err) {
-        console.error("Erreur lors de la suppression du produit:", err);
-        toast.error("Erreur lors de la suppression");
+    try {
+      const response = await deleteProduct(productId);
+      if (response && response.success) {
+        setProductsWithRatings(productsWithRatings.filter(product => product._id !== productId));
+        setProducts(products.filter(product => product._id !== productId));
+        toast.success("Produit supprimé avec succès");
+      } else {
+        toast.error(response?.message || "Erreur lors de la suppression");
       }
-      setConfirmDelete(null);
-    } else {
-      setConfirmDelete(productId);
-      // Timer pour réinitialiser l'état de confirmation après 3 secondes
-      setTimeout(() => setConfirmDelete(null), 3000);
+    } catch (err) {
+      console.error("Erreur lors de la suppression du produit:", err);
+      toast.error("Erreur lors de la suppression");
     }
+  };
+
+  // Callback pour quand le produit est chargé dans la popup
+  const handleProductLoaded = (product) => {
+    console.log("Produit chargé dans la popup:", product.name || product.title);
   };
 
   // Gérer la suppression d'un produit depuis la popup
   const handleProductDeleted = (productId) => {
     setProductsWithRatings(productsWithRatings.filter(product => product._id !== productId));
     setProducts(products.filter(product => product._id !== productId));
+    handleClosePopup();
   };
 
   // Formater le prix
@@ -334,18 +335,17 @@ const ProductList = () => {
     <div className="bg-white p-6 rounded-xl shadow-md border border-amber-100">
       {/* Afficher la popup de détail produit si nécessaire */}
       {showProductPopup && selectedProductId && (
-        <ProductDetail 
-          productId={selectedProductId} 
-          isPopup={true}
+        <ProductPopup
+          productId={selectedProductId}
           onClose={handleClosePopup}
-          onProductDeleted={handleProductDeleted}
+          onProductLoaded={handleProductLoaded}
         />
       )}
 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <ShoppingBag className="w-6 h-6 text-amber-600 mr-2" />
-          <h2 className="text-xl font-semibold text-amber-700">Liste des Produits</h2>
+          <h2 className="text-xl font-semibold text-amber-700">Liste des Produits Disponibles</h2>
           {isAdmin && (
             <div className="ml-3 flex items-center bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">
               <Shield className="w-3 h-3 mr-1" />
@@ -448,19 +448,18 @@ const ProductList = () => {
                       <div className="w-16 h-16 rounded-md overflow-hidden border border-amber-100">
                         {product.images && product.images.length > 0 ? (
                         <img
-                        src={
-                          product.images && product.images[0]?.url?.startsWith("http")
-                            ? product.images[0].url
-                            : `http://localhost:8000/${product.images[0]?.url}`
-                        }
-                        alt={product.name}
-                        className="w-full h-full object-contain hover:scale-105 transition duration-300"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "https://placehold.co/400x300?text=Pas+d'image";
-                        }}
-                      />
-                      
+                          src={
+                            product.images && product.images[0]?.url?.startsWith("http")
+                              ? product.images[0].url
+                              : `http://localhost:8000/${product.images[0]?.url}`
+                          }
+                          alt={product.name}
+                          className="w-full h-full object-contain hover:scale-105 transition duration-300"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://placehold.co/400x300?text=Pas+d'image";
+                          }}
+                        />
                         ) : (
                           <div className="w-full h-full bg-amber-100 flex items-center justify-center">
                             <span className="text-amber-400 text-xs">Aucune image</span>

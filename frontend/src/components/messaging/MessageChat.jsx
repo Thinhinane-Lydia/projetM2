@@ -534,48 +534,40 @@ useEffect(() => {
   }, [conversationId, getOtherParticipant, navigate]);
   
 
-  
-  
-//////////////
-
-
-  // Fonction pour charger les messages
-  // Fonction pour charger les messages
   // const fetchMessages = useCallback(async () => {
   //   if (!conversationId) return;
-
+  
   //   try {
   //     const token = localStorage.getItem("token");
   //     if (!token) {
   //       navigate('/login');
   //       return;
   //     }
-      
+  
   //     const response = await axios.get(`${API_BASE_URL}/messages/conversation/${conversationId}`, {
   //       headers: { Authorization: `Bearer ${token}` }
   //     });
-      
+  
   //     if (response.data.success) {
   //       console.log("Messages reçus:", response.data.data);
-        
+  
   //       // Filtrer les messages des utilisateurs bloqués
   //       const filteredMessages = response.data.data.filter(message => {
   //         const senderId = message.senderId?._id || (typeof message.senderId === 'string' ? message.senderId : null);
-        
+  
   //         // Toujours afficher nos propres messages
   //         if (senderId === currentUserId) return true;
-        
+  
   //         // Vérifier si l'utilisateur qui a envoyé le message est bloqué
-  //         return !isUserBlocked(senderId);
+  //         return !isUserBlocked(senderId); // Fonction `isUserBlocked` que vous avez déjà pour vérifier si l'utilisateur est bloqué
   //       });
-        
-        
+  
   //       setMessages(filteredMessages);
-        
+  
   //       // Pour chaque message, préchargez les informations utilisateur si nécessaire
   //       filteredMessages.forEach(message => {
   //         if (message.senderId && typeof message.senderId === 'object' && message.senderId._id && !message.senderId.name) {
-  //           fetchUserDetails(message.senderId._id);
+  //           fetchUserDetails(message.senderId._id); // Récupérer le profil de l'utilisateur si nécessaire
   //         }
   //       });
   //     } else {
@@ -588,6 +580,14 @@ useEffect(() => {
   //     setLoading(false);
   //   }
   // }, [conversationId, API_BASE_URL, navigate, fetchUserDetails, currentUserId, isUserBlocked]);
+  
+
+ 
+
+ 
+  
+
+  // Effet initial pour charger la conversation et les messages
   const fetchMessages = useCallback(async () => {
     if (!conversationId) return;
   
@@ -604,22 +604,12 @@ useEffect(() => {
   
       if (response.data.success) {
         console.log("Messages reçus:", response.data.data);
-  
-        // Filtrer les messages des utilisateurs bloqués
-        const filteredMessages = response.data.data.filter(message => {
-          const senderId = message.senderId?._id || (typeof message.senderId === 'string' ? message.senderId : null);
-  
-          // Toujours afficher nos propres messages
-          if (senderId === currentUserId) return true;
-  
-          // Vérifier si l'utilisateur qui a envoyé le message est bloqué
-          return !isUserBlocked(senderId); // Fonction `isUserBlocked` que vous avez déjà pour vérifier si l'utilisateur est bloqué
-        });
-  
-        setMessages(filteredMessages);
-  
+        
+        // Utiliser tous les messages sans filtrage basé sur les utilisateurs bloqués
+        setMessages(response.data.data);
+        
         // Pour chaque message, préchargez les informations utilisateur si nécessaire
-        filteredMessages.forEach(message => {
+        response.data.data.forEach(message => {
           if (message.senderId && typeof message.senderId === 'object' && message.senderId._id && !message.senderId.name) {
             fetchUserDetails(message.senderId._id); // Récupérer le profil de l'utilisateur si nécessaire
           }
@@ -633,36 +623,8 @@ useEffect(() => {
     } finally {
       setLoading(false);
     }
-  }, [conversationId, API_BASE_URL, navigate, fetchUserDetails, currentUserId, isUserBlocked]);
+  }, [conversationId, API_BASE_URL, navigate, fetchUserDetails]);
   
-
- 
-
-  // Marquer les messages comme lus
-  const markMessagesAsRead = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token || !conversationId) return;
-  
-      const response = await axios.put(`${API_BASE_URL}/messages/read/${conversationId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-  
-      // Mettre à jour les messages localement pour marquer comme lus
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
-          msg.senderId?._id !== currentUserId && !msg.read 
-            ? { ...msg, read: true } 
-            : msg
-        )
-      );
-    } catch (err) {
-      console.error('Erreur lors du marquage des messages comme lus:', err);
-    }
-  }, [conversationId, currentUserId, API_BASE_URL]);
-  
-
-  // Effet initial pour charger la conversation et les messages
   useEffect(() => {
     if (conversationId) {
       setLoading(true);
@@ -670,27 +632,24 @@ useEffect(() => {
         fetchConversationDetailsFromApi(),
         fetchMessages()
       ]).then(() => {
-        markMessagesAsRead();
-      }).finally(() => {
         setLoading(false);
+      }).finally(() => {
+        
       });
     }
     
     // Mettre en place une actualisation périodique des messages
     const interval = setInterval(() => {
       fetchMessages();
-      markMessagesAsRead();
+      
     }, 10000);
 
     // Nettoie l'intervalle lorsque le composant est démonté ou que la conversation change
     return () => clearInterval(interval);
-}, [conversationId, fetchMessages, markMessagesAsRead]);
+}, [conversationId, fetchMessages]);
 
  
-  // Suppression de l'effet qui défilement automatiquement vers le bas
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages]);
+
 
   // Effet pour ajuster la hauteur du textarea
   useEffect(() => {
@@ -1145,18 +1104,14 @@ return (
                 className="relative h-12 w-12 rounded-full object-cover border-2 border-amber-300 shadow-md z-10"
                 onError={(e) => {e.target.onerror = null; e.target.src = '/default-avatar.png';}}
               />
-              {recipient.isOnline && (
-                <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white z-20"></span>
-              )}
+              
             </div>
             
             <div className="ml-3">
               <h2 className="font-medium text-gray-800 text-lg">
                 {recipientDisplayName}
               </h2>
-              <p className={`text-xs ${recipient.isOnline ? 'text-green-600' : 'text-amber-600'}`}>
-                {recipient.isOnline ? "En ligne" : "Hors ligne"}
-              </p>
+             
             </div>
           </div>
         )}

@@ -1,984 +1,133 @@
-// import React, { useState, useEffect } from "react";
-// import { useParams, useNavigate, useLocation } from "react-router-dom";
-// import { fetchProducts, fetchUser, deleteProduct } from "../../utils/api";
-// import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2, FiMessageCircle, FiShield, FiX } from "react-icons/fi";
-// import { HiOutlineShoppingBag } from "react-icons/hi";
-// import ProductComments from "./ProductComments";
-// import Popup from "../Popup/Popup";
-// import { toast } from "react-toastify";
-// import { useCart } from "../../components/cart/Cart";
-// import axios from "axios";
-
- 
-
-// // Mode popup = true pour les admins qui voient le composant comme popup
-// // Mode popup = false pour la page normale InfoProduct
-// const ProductDetail = ({ 
-//   productId: propProductId, 
-//   isPopup = false, 
-//   onClose = null,
-//   onProductDeleted = null
-// }) => {
-//   // Récupérer productId soit depuis les props (mode popup) soit depuis l'URL (mode page)
-//   const { productId: paramProductId } = useParams();
-//   const productId = propProductId || paramProductId;
-  
-//   const navigate = useNavigate();
-//   const location = useLocation();
-
-//   const [product, setProduct] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [isFavorite, setIsFavorite] = useState(false);
-//   const [inCart, setInCart] = useState(false);
-//   const [currentImage, setCurrentImage] = useState(0);
-//   const [currentUser, setCurrentUser] = useState(null);
-//   const [showPopup, setShowPopup] = useState(false);
-//   const [avatarError, setAvatarError] = useState(false);
-//   const [isOwner, setIsOwner] = useState(false);
-//   const [isAdmin, setIsAdmin] = useState(false);
-
-//   const cartContext = useCart();
-  
-//   if (!cartContext) {
-//     console.error("❌ useCart() est `undefined`. Assurez-vous d'envelopper votre application avec `<CartProvider>`.");
-//   }
-  
-//   const { addToCart: contextAddToCart, removeFromCart: contextRemoveFromCart, cart } = cartContext || { 
-//     cart: [], 
-//     addToCart: () => {}, 
-//     removeFromCart: () => {} 
-//   };
-
-//   // Récupérer l'utilisateur courant
-//   useEffect(() => {
-//     const getCurrentUser = async () => {
-//       try {
-//         const userData = await fetchUser();
-//         if (userData.success) {
-//           setCurrentUser(userData.user);
-//           setIsAdmin(userData.user.role === 'admin');
-//         }
-//       } catch (err) {
-//         console.error("Erreur lors de la récupération de l'utilisateur courant:", err);
-//       }
-//     };
-
-//     getCurrentUser();
-//   }, []);
-
-//   // Récupérer les informations du produit  
-//   useEffect(() => {
-//     const getProductData = async () => {
-//       try {
-//         setLoading(true);
-//         const data = await fetchProducts();
-//         const foundProduct = data.products.find(p => p._id === productId);
-
-//         if (!foundProduct) {
-//           setError("Produit non trouvé");
-//         } else {
-//           setProduct(foundProduct);
-
-//           // Vérifier si l'utilisateur connecté est le vendeur du produit
-//           if (currentUser && foundProduct.seller &&
-//             currentUser._id === foundProduct.seller._id) {
-//             setIsOwner(true);
-//           }
-//         }
-//       } catch (err) {
-//         setError("Erreur lors du chargement du produit");
-//         console.error("Erreur de chargement du produit:", err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     getProductData();
-//   }, [productId, currentUser]);
-
-//   // Vérifier si le produit est dans les favoris et dans le panier
-//   useEffect(() => {
-//     const loadFavorites = async () => {
-//       try {
-//         const token = localStorage.getItem("token");
-//         if (!token) return;
-
-//         const response = await axios.get("http://localhost:8000/api/v2/favorites", {
-//           headers: {
-//             Authorization: `Bearer ${token}`
-//           }
-//         });
-
-//         if (response.data.success && response.data.data) {
-//           const favoriteIds = response.data.data
-//             .filter(fav => fav && fav.product)
-//             .map(fav => fav.product._id);
-          
-//           // Mettre à jour l'état isFavorite si le produit est dans les favoris
-//           setIsFavorite(favoriteIds.includes(productId));
-//         }
-//       } catch (error) {
-//         console.error("❌ Erreur lors du chargement des favoris:", error.response?.data || error);
-//       }
-//     };
-
-//     loadFavorites();
-    
-//     // Vérifier si le produit est dans le panier
-//     if (cart && cart.length > 0 && productId) {
-//       const isProductInCart = cart.some(item => item.product?._id === productId);
-//       setInCart(isProductInCart);
-//     }
-//   }, [productId, cart]);
-
-//   // Fonction utilitaire pour construire l'URL de l'image
-//   const getImageUrl = (imageUrl) => {
-//     if (!imageUrl) return "";
-
-//     return imageUrl.startsWith("http")
-//       ? imageUrl
-//       : `http://localhost:8000/${imageUrl}`;
-//   };
-
-//   // Gérer l'ajout aux favoris
-//   const toggleFavorite = async () => {
-//     if (!currentUser) {
-//       setShowPopup(true);
-//       return;
-//     }
-
-//     try {
-//       const token = localStorage.getItem("token");
-//       if (!token) {
-//         console.error("❌ Aucun token trouvé !");
-//         return;
-//       }
-
-//       if (isFavorite) {
-//         // Supprimer des favoris
-//         await axios.delete(`http://localhost:8000/api/v2/favorites/${productId}`, {
-//           headers: { Authorization: `Bearer ${token}` }
-//         });
-
-//         setIsFavorite(false);
-//         console.log("✅ Produit retiré des favoris");
-//       } else {
-//         // Ajouter aux favoris
-//         await axios.post("http://localhost:8000/api/v2/favorites",
-//           { productId },
-//           { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
-//         );
-
-//         setIsFavorite(true);
-//         console.log("✅ Produit ajouté aux favoris");
-//       }
-//     } catch (error) {
-//       console.error("❌ Erreur lors de la gestion des favoris :", error.response?.data || error);
-//     }
-//   };
-
-//   // Gérer l'ajout au panier
-//   const toggleCart = async () => {
-//     if (!currentUser) {
-//       setShowPopup(true);
-//       return;
-//     }
-
-//     try {
-//       const cartItem = cart.find(item => item.product?._id === productId);
-      
-//       if (cartItem) {
-//         await contextRemoveFromCart(cartItem._id);
-//         setInCart(false);
-//         console.log("✅ Produit retiré du panier");
-//       } else {
-//         await contextAddToCart(productId, 1);
-//         setInCart(true);
-//         console.log("✅ Produit ajouté au panier");
-//       }
-//     } catch (error) {
-//       console.error("❌ Erreur lors de l'ajout/suppression du panier", error);
-//     }
-//   };
-
-//   // Fermer le popup
-//   const handleClosePopup = () => {
-//     setShowPopup(false);
-//   };
-
-//   // Changer l'image affichée
-//   const handleImageChange = (index) => {
-//     setCurrentImage(index);
-//   };
-
-//   // Gérer l'erreur de chargement de l'avatar
-//   const handleAvatarError = () => {
-//     setAvatarError(true);
-//   };
-
-//   // Fonction pour contacter le vendeur
-//   const handleContactSeller = async () => {
-//     if (!currentUser) {
-//       setShowPopup(true);
-//       return;
-//     }
-  
-//     try {
-//       // Appeler l'API pour démarrer ou récupérer une conversation
-//       const response = await axios.post(
-//         "http://localhost:8000/api/v2/conversations/start", // Modification de l'URL
-//         { receiverId: product.seller._id },
-//         { withCredentials: true }
-//       );
-  
-//       const conversationId = response.data.conversationId;
-  
-//       // Rediriger vers la page de conversation
-//       navigate(`/messages/${conversationId}`);
-//     } catch (error) {
-//       console.error("❌ Erreur lors de la création de la conversation :", error);
-//     }
-//   };
-  
-  
-
-//   // Fonction pour afficher l'avatar du vendeur de manière sécurisée
-//   const renderSellerAvatar = () => {
-//     // Vérifie si le vendeur existe
-//     if (!product.seller) {
-//       return (
-//         <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-//           <span className="text-lg font-bold text-amber-600">?</span>
-//         </div>
-//       );
-//     }
-
-//     // Si l'avatar existe et n'a pas d'erreur
-//     if (product.seller.avatar && !avatarError) {
-//       let avatarUrl;
-      
-//       if (typeof product.seller.avatar === 'object' && product.seller.avatar.url) {
-//         // Cas où l'avatar est un objet avec une propriété url
-//         avatarUrl = product.seller.avatar.url.startsWith("http") 
-//           ? product.seller.avatar.url 
-//           : `http://localhost:8000${product.seller.avatar.url}`;
-//       } else if (typeof product.seller.avatar === 'string') {
-//         // Cas où l'avatar est directement une chaîne de caractères
-//         avatarUrl = product.seller.avatar.startsWith("http") 
-//           ? product.seller.avatar 
-//           : `http://localhost:8000/${product.seller.avatar}`;
-//       } else {
-//         // Si format non reconnu, utilisez une valeur par défaut
-//         return (
-//           <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-//             <span className="text-lg font-bold text-amber-600">
-//               {product.seller.name?.charAt(0) || "?"}
-//             </span>
-//           </div>
-//         );
-//       }
-
-//       return (
-//         <img
-//           src={avatarUrl}
-//           alt={product.seller.name || "Vendeur"}
-//           className="w-12 h-12 rounded-full object-cover ring-2 ring-amber-200"
-//           onError={handleAvatarError}
-//         />
-//       );
-//     }
-
-//     // Fallback: affiche la première lettre du nom du vendeur
-//     return (
-//       <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-//         <span className="text-lg font-bold text-amber-600">
-//           {product.seller.name?.charAt(0) || "?"}
-//         </span>
-//       </div>
-//     );
-//   };
-
-//   // Fonction pour supprimer le produit
-//   const handleDelete = async () => {
-//     if (!window.confirm("Voulez-vous vraiment supprimer ce produit ?")) return;
-
-//     try {
-//       const response = await deleteProduct(productId);
-//       if (response.success) {
-//         toast.success("Produit supprimé avec succès");
-        
-//         // Si c'est en mode popup, informer le parent et fermer
-//         if (isPopup) {
-//           if (onProductDeleted) {
-//             onProductDeleted(productId);
-//           }
-//           if (onClose) {
-//             onClose();
-//           }
-//         } else {
-//           // Sinon, rediriger vers la page appropriée
-//           navigate(isAdmin ? "/Admin" : "/Profil");
-//         }
-//       } else {
-//         toast.error(response?.message || "Erreur lors de la suppression");
-//       }
-//     } catch (err) {
-//       console.error("Erreur lors de la suppression:", err);
-//       toast.error("Une erreur est survenue lors de la suppression");
-//     }
-//   };
-
-//   // Fonction pour modifier le produit
-//   const handleEdit = () => {
-//     navigate(`/Sell/${productId}`);
-//   };
-
-//   if (loading) {
-//     return isPopup ? (
-//       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-//         <div className="bg-white p-8 rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
-//           <div className="flex justify-center items-center h-64">
-//             <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-amber-500"></div>
-//           </div>
-//         </div>
-//       </div>
-//     ) : (
-//       <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-//         <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-amber-500"></div>
-//       </div>
-//     );
-//   }
-
-//   if (error || !product) {
-//     if (isPopup) {
-//       return (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-//           <div className="bg-white p-8 rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
-//             <div className="flex justify-between items-center mb-6">
-//               <h2 className="text-xl font-bold text-red-600">Erreur</h2>
-//               <button 
-//                 onClick={onClose} 
-//                 className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-//               >
-//                 <FiX size={24} />
-//               </button>
-//             </div>
-//             <p className="text-center text-gray-700 my-6">{error || "Produit non trouvé"}</p>
-//           </div>
-//         </div>
-//       );
-//     }
-    
-//     return (
-//       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-neutral-50">
-//         <div className="text-xl text-neutral-700 mb-4 font-light">{error || "Produit non trouvé"}</div>
-//         <button
-//           onClick={() => navigate(-1)}
-//           className="px-6 py-2.5 bg-amber-500 text-white rounded-full hover:bg-amber-600 transition shadow-md flex items-center"
-//         >
-//           <FiArrowLeft className="mr-2" /> Retour aux produits
-//         </button>
-//       </div>
-//     );
-//   }
-
-//   // Contenu principal du détail produit qui sera utilisé dans les deux modes
-//   const productContent = (
-//     <>
-//       {/* Titre et ID du produit */}
-//       <div className={`px-${isPopup ? '4' : '8'} pt-${isPopup ? '2' : '8'} pb-2 flex justify-between items-start`}>
-//         <div>
-//           <h1 className={`text-${isPopup ? '2xl' : '3xl'} font-bold text-neutral-800 mb-${isPopup ? '1' : '2'}`}>{product.name}</h1>
-//           <p className="text-neutral-500 text-sm font-medium">
-//             ID: {product._id}
-//           </p>
-//         </div>
-//         {!isPopup && (
-//           <button
-//             onClick={toggleFavorite}
-//             className="p-3 rounded-full hover:bg-neutral-100 transition-all duration-200 group"
-//             aria-label="Ajouter aux favoris"
-//           >
-//             <FiHeart
-//               size={24}
-//               className={`transition duration-300 ${
-//                 isFavorite 
-//                   ? 'text-red-500 fill-red-500' 
-//                   : 'text-neutral-400 group-hover:text-red-500'
-//               }`}
-//             />
-//           </button>
-//         )}
-//       </div>
-
-//       {/* Prix */}
-//       <div className={`px-${isPopup ? '4' : '8'} mb-${isPopup ? '4' : '6'}`}>
-//         <p className={`text-${isPopup ? '2xl' : '3xl'} font-bold text-amber-600`}>{product.price} DA</p>
-//         {product.oldPrice && (
-//           <p className="text-neutral-500 line-through text-sm mt-1">
-//             {product.oldPrice} DA
-//           </p>
-//         )}
-//       </div>
-
-//       {/* Galerie d'images */}
-//       <div className={`px-${isPopup ? '4' : '6 md:px-8'}`}>
-//         <div className={`relative h-${isPopup ? '64' : '80 md:h-96'} bg-neutral-50 rounded-xl overflow-hidden mb-4 flex items-center justify-center`}>
-//           {product.images && product.images.length > 0 ? (
-//             <img
-//               src={getImageUrl(product.images[currentImage]?.url)}
-//               alt={product.name}
-//               className="h-full object-contain transition duration-300 ease-in-out"
-//             />
-//           ) : (
-//             <div className="text-neutral-400">Aucune image disponible</div>
-//           )}
-//         </div>
-
-//         {/* Miniatures avec animation et effet hover */}
-//         {product.images && product.images.length > 1 && (
-//           <div className="flex overflow-x-auto gap-3 py-2 scrollbar-thin scrollbar-thumb-amber-200 pb-4">
-//             {product.images.map((img, idx) => (
-//               <div
-//                 key={idx}
-//                 className={`relative w-${isPopup ? '16' : '20'} h-${isPopup ? '16' : '20'} flex-shrink-0 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 ${
-//                   currentImage === idx 
-//                     ? 'ring-2 ring-amber-500 shadow-md transform scale-105' 
-//                     : 'opacity-80 hover:opacity-100'
-//                 }`}
-//                 onClick={() => handleImageChange(idx)}
-//               >
-//                 <img
-//                   src={getImageUrl(img.url)}
-//                   alt={`Miniature ${idx + 1}`}
-//                   className="w-full h-full object-cover rounded-lg"
-//                 />
-//               </div>
-//             ))}
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Caractéristiques du produit */}
-//       <div className={`mt-${isPopup ? '6' : '8'} px-${isPopup ? '4' : '8'}`}>
-//         <h2 className={`text-lg font-semibold text-neutral-700 mb-${isPopup ? '2' : '4'} flex items-center`}>
-//           <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-//           Caractéristiques
-//         </h2>
-//         <div className={`grid grid-cols-1 ${isPopup ? 'sm:grid-cols-2' : 'md:grid-cols-2'} gap-${isPopup ? '2' : '4'} bg-neutral-50 rounded-xl p-${isPopup ? '4' : '5'}`}>
-//           {product.category && (
-//             <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-//               <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Catégorie</p>
-//               <p className="font-medium text-neutral-700">{product.category.name || "Non spécifié"}</p>
-//             </div>
-//           )}
-//           {product.subCategory && (
-//             <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-//               <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Sous-catégorie</p>
-//               <p className="font-medium text-neutral-700">{product.subCategory.name || "Non spécifié"}</p>
-//             </div>
-//           )}
-//           {product.size && (
-//             <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-//               <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Taille</p>
-//               <p className="font-medium text-neutral-700">{product.size.name}</p>
-//             </div>
-//           )}
-//           {product.brand && (
-//             <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-//               <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Marque</p>
-//               <p className="font-medium text-neutral-700">{product.brand}</p>
-//             </div>
-//           )}
-//           {product.color && (
-//             <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-//               <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Couleur</p>
-//               <p className="font-medium text-neutral-700">{product.color}</p>
-//             </div>
-//           )}
-//           {product.condition && (
-//             <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-//               <p className="text-xs text-amber-600 uppercase font-semibold mb-1">État</p>
-//               <p className="font-medium text-neutral-700">{product.condition}</p>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-
-//       {/* Description */}
-//       {product.description && (
-//         <div className={`mt-6 px-${isPopup ? '4' : '8'}`}>
-//           <h2 className={`text-lg font-semibold text-neutral-700 mb-${isPopup ? '2' : '3'} flex items-center`}>
-//             <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-//             Description
-//           </h2>
-//           <div className={`bg-white p-${isPopup ? '3' : '4'} rounded-xl border border-neutral-200`}>
-//             <p className="text-neutral-600 leading-relaxed">{product.description}</p>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Vendeur */}
-//       <div className={`mt-6 ${isPopup ? 'px-4' : 'mx-8'}`}>
-//         <div className={`flex items-center ${!isPopup && !isOwner && product.seller ? 'justify-between' : ''} p-${isPopup ? '3' : '4'} bg-amber-50 rounded-xl border border-amber-100`}>
-//           <div className="flex items-center">
-//             {product.seller && renderSellerAvatar()}
-//             <div className="ml-3">
-//               <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
-//               <p className="font-medium text-neutral-800">
-//                 {product.seller?.name || "Vendeur inconnu"}
-//               </p>
-//             </div>
-//           </div>
-//           {!isPopup && !isOwner && product.seller && (
-//             <button
-//               onClick={handleContactSeller}
-//               className="px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors flex items-center shadow-sm"
-//             >
-//               <FiMessageCircle className="mr-2" />
-//               Contacter le vendeur
-//             </button>
-//           )}
-//         </div>
-//       </div>
-
-//       {/* Boutons d'action */}
-//       <div className={`mt-${isPopup ? '6' : '8'} px-${isPopup ? '4' : '8'} pb-${isPopup ? '4' : '8'}`}>
-//         {isPopup ? (
-//           // Mode popup (admin): uniquement bouton de suppression
-//           <button
-//             onClick={handleDelete}
-//             className="w-full py-3 px-4 rounded-xl flex items-center justify-center bg-red-600 hover:bg-red-700 text-white transition-colors shadow-md hover:shadow-lg"
-//           >
-//             <FiTrash2 className="mr-2" />
-//             Supprimer ce produit
-//           </button>
-//         ) : isOwner ? (
-//           // Mode propriétaire: modifier et supprimer
-//           <div className="flex space-x-4">
-//             <button
-//               onClick={handleEdit}
-//               className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-md hover:shadow-lg"
-//             >
-//               <FiEdit2 className="mr-2" />
-//               Modifier
-//             </button>
-//             <button
-//               onClick={handleDelete}
-//               className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-neutral-700 hover:bg-neutral-800 text-white transition-colors shadow-md hover:shadow-lg"
-//             >
-//               <FiTrash2 className="mr-2" />
-//               Supprimer
-//             </button>
-//           </div>
-//         ) : (
-//           // Mode client: ajouter au panier
-//           <button
-//             onClick={toggleCart}
-//             className={`w-full py-4 px-6 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
-//               inCart
-//                 ? 'bg-green-600 hover:bg-green-700 text-white'
-//                 : 'bg-amber-500 hover:bg-amber-600 text-white'
-//             }`}
-//           >
-//             <HiOutlineShoppingBag size={22} className="mr-2" />
-//             {inCart ? 'Retiré du panier' : 'Ajouter au panier'}
-//           </button>
-//         )}
-//       </div>
-//     </>
-//   );
-
-//   // Affichage différent selon le mode (popup ou page)
-//   if (isPopup) {
-//     return (
-//       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-//         <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
-//           {/* En-tête avec bouton de fermeture */}
-//           <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-//             <div className="flex items-center">
-//               <h2 className="text-xl font-bold text-neutral-800">Détails du produit</h2>
-//               <div className="ml-3 flex items-center bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">
-//                 <FiShield className="w-3 h-3 mr-1" />
-//                 Mode Admin
-//               </div>
-//             </div>
-//             <button 
-//               onClick={onClose} 
-//               className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-//             >
-//               <FiX size={24} />
-//             </button>
-//           </div>
-
-//           <div className="p-6">
-//             {productContent}
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-b from-amber-50/50 to-white pt-10 pb-16">
-//       {showPopup && (
-//         <Popup
-//           message="Vous devez être connecté pour effectuer cette action."
-//           onClose={handleClosePopup}
-//         />
-//       )}
-
-//       <div className="container mx-auto px-4 max-w-6xl">
-//         {/* Navigation */}
-//         <div className="mb-8">
-//           <button
-//             onClick={() => navigate(-1)}
-//             className="flex items-center text-amber-700 hover:text-amber-900 transition font-medium group"
-//           >
-//             <FiArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform" /> 
-//             Retour aux produits
-//           </button>
-//         </div>
-
-//         {/* Badge Mode Admin si admin */}
-//         {isAdmin && (
-//           <div className="mb-5 inline-flex items-center bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-sm">
-//             <FiShield className="w-4 h-4 mr-1.5" />
-//             Mode Administrateur
-//           </div>
-//         )}
-
-//         {/* Mise en page adaptée selon le mode */}
-//         <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-8`}>
-//           {/* Colonne principale: infos produit */}
-//           <div className={isAdmin ? "w-full" : "lg:col-span-2"}>
-//             <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full">
-//               {/* Section principale - Photos et infos produit */}
-//               <div className="md:flex flex-col">
-//                 {productContent}
-//                 {/* En-tête avec titre et bouton favoris */}
-//                 <div className="px-8 pt-8 pb-2 flex justify-between items-start">
-//                   <div>
-//                     <h1 className="text-3xl font-bold text-neutral-800 mb-2">{product.name}</h1>
-                    
-//                   </div>
-//                   <button
-//                     onClick={toggleFavorite}
-//                     className="p-3 rounded-full hover:bg-neutral-100 transition-all duration-200 group"
-//                     aria-label="Ajouter aux favoris"
-//                   >
-//                     <FiHeart
-//                       size={24}
-//                       className={`transition duration-300 ${
-//                         isFavorite 
-//                           ? 'text-red-800 fill-red-800' 
-//                           : 'text-neutral-400 group-hover:text-red-500'
-//                       }`}
-//                     />
-//                   </button>
-//                 </div>
-
-//                 {/* Prix */}
-//                 <div className="px-8 mb-6">
-//                   <p className="text-3xl font-bold text-amber-600">{product.price} DA</p>
-//                   {product.oldPrice && (
-//                     <p className="text-neutral-500 line-through text-sm mt-1">
-//                       {product.oldPrice} DA
-//                     </p>
-//                   )}
-//                 </div>
-
-//                 {/* Galerie d'images */}
-//                 <div className="px-6 md:px-8">
-//                   <div className="relative h-80 md:h-96 bg-neutral-50 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
-//                     {product.images && product.images.length > 0 ? (
-//                       <img
-//                         src={getImageUrl(product.images[currentImage]?.url)}
-//                         alt={product.name}
-//                         className="w-full h-full object-contain transition duration-300 ease-in-out"
-//                       />
-//                     ) : (
-//                       <div className="text-neutral-400">Aucune image disponible</div>
-//                     )}
-//                   </div>
-
-//                   {/* Miniatures avec animation et effet hover */}
-//                   {product.images && product.images.length > 1 && (
-//                     <div className="flex overflow-x-auto gap-3 py-2 scrollbar-thin scrollbar-thumb-amber-200 pb-4">
-//                       {product.images.map((img, idx) => (
-//                         <div
-//                           key={idx}
-//                           className={`relative w-20 h-20 flex-shrink-0 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 ${
-//                             currentImage === idx 
-//                               ? 'ring-2 ring-amber-500 shadow-md transform scale-105' 
-//                               : 'opacity-80 hover:opacity-100'
-//                           }`}
-//                           onClick={() => handleImageChange(idx)}
-//                         >
-//                           <img
-//                             src={getImageUrl(img.url)}
-//                             alt={`Miniature ${idx + 1}`}
-//                             className="w-full h-full object-cover rounded-lg"
-//                           />
-//                         </div>
-//                       ))}
-//                     </div>
-//                   )}
-//                 </div>
-
-//                 {/* Caractéristiques du produit */}
-//                 <div className="mt-8 px-8">
-//                   <h2 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
-//                     <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-//                     Caractéristiques
-//                   </h2>
-//                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-neutral-50 rounded-xl p-5">
-//                     <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-//                       <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Catégorie</p>
-//                       <p className="font-medium text-neutral-700">{product.category?.name || "Non spécifié"}</p>
-//                     </div>
-//                     <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-//                       <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Sous-catégorie</p>
-//                       <p className="font-medium text-neutral-700">{product.subCategory?.name || "Non spécifié"}</p>
-//                     </div>
-//                     {product.size && (
-//                       <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-//                         <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Taille</p>
-//                         <p className="font-medium text-neutral-700">{product.size.name}</p>
-//                       </div>
-//                     )}
-//                     {product.brand && (
-//                       <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-//                         <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Marque</p>
-//                         <p className="font-medium text-neutral-700">{product.brand}</p>
-//                       </div>
-//                     )}
-//                     {product.material && (
-//                       <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-//                         <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Matériau</p>
-//                         <p className="font-medium text-neutral-700">{product.material}</p>
-//                       </div>
-//                     )}
-//                     {product.color && (
-//                       <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-//                         <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Couleur</p>
-//                         <p className="font-medium text-neutral-700">{product.color}</p>
-//                       </div>
-//                     )}
-//                     {product.condition && (
-//                       <div className="p-3 rounded-lg border border-neutral-200 bg-white">
-//                         <p className="text-xs text-amber-600 uppercase font-semibold mb-1">État</p>
-//                         <p className="font-medium text-neutral-700">{product.condition}</p>
-//                       </div>
-//                     )}
-//                   </div>
-//                 </div>
-
-//                 {/* Description */}
-//                 {product.description && (
-//                   <div className="mt-6 px-8">
-//                     <h2 className="text-lg font-semibold text-neutral-700 mb-3 flex items-center">
-//                       <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-//                       Description
-//                     </h2>
-//                     <div className="bg-white p-4 rounded-xl border border-neutral-200">
-//                       <p className="text-neutral-600 leading-relaxed">{product.description}</p>
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 {/* Vendeur */}
-//                 <div className="mt-6 mx-8">
-//                   <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-100">
-//                     <div className="flex items-center">
-//                       {product.seller && renderSellerAvatar()}
-//                       <div className="ml-3">
-//                         <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
-//                         <p className="font-medium text-neutral-800">
-//                           {product.seller?.name || "Vendeur inconnu"}
-//                         </p>
-//                       </div>
-//                     </div>
-//                     {!isOwner && product.seller && (
-//                       <button
-//                         onClick={handleContactSeller}
-//                         className="px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors flex items-center shadow-sm"
-//                       >
-//                         <FiMessageCircle className="mr-2" />
-//                         Contacter le vendeur
-//                       </button>
-//                     )}
-//                   </div>
-//                 </div>
-
-//                 {/* Boutons d'action */}
-//                 <div className="mt-8 px-8 pb-8">
-//                   {isOwner ? (
-//                     <div className="flex space-x-4">
-//                       <button
-//                         onClick={handleEdit}
-//                         className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-md hover:shadow-lg"
-//                       >
-//                         <FiEdit2 className="mr-2" />
-//                         Modifier
-//                       </button>
-//                       <button
-//                         onClick={handleDelete}
-//                         className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-neutral-700 hover:bg-neutral-800 text-white transition-colors shadow-md hover:shadow-lg"
-//                       >
-//                         <FiTrash2 className="mr-2" />
-//                         Supprimer
-//                       </button>
-//                     </div>
-//                   ) : (
-//                     <button
-//                       onClick={toggleCart}
-//                       className={`w-full py-4 px-6 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
-//                         inCart
-//                           ? 'bg-green-600 hover:bg-green-700 text-white'
-//                           : 'bg-amber-500 hover:bg-amber-600 text-white'
-//                       }`}
-//                     >
-//                       <HiOutlineShoppingBag 
-//                         size={22} 
-//                         className="mr-2"
-//                       />
-//                       {inCart ? 'Retirer du panier' : 'Ajouter au panier'}
-//                     </button>
-//                   )}
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Colonne des commentaires (uniquement en mode normal) */}
-//           {!isAdmin && (
-//             <div className="lg:col-span-1">
-//               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full p-6">
-//                 <h2 className="text-xl font-bold text-neutral-800 mb-6 flex items-center">
-//                   <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-//                   Avis & Commentaires
-//                 </h2>
-//                 <ProductComments productId={productId} />
-//               </div>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ProductDetail;
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { fetchProducts, fetchUser, deleteProduct } from "../../utils/api";
-import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2, FiMessageCircle, FiShield, FiX } from "react-icons/fi";
-import { HiOutlineShoppingBag } from "react-icons/hi";
+import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "../../components/cart/Cart";
 import ProductComments from "./ProductComments";
 import Popup from "../Popup/Popup";
 import { toast } from "react-toastify";
-import { useCart } from "../../components/cart/Cart";
 import axios from "axios";
 
-// Mode popup = true pour les admins qui voient le composant comme popup
-// Mode popup = false pour la page normale InfoProduct
-const ProductDetail = ({ 
-  productId: propProductId, 
-  isPopup = false, 
-  onClose = null,
-  onProductDeleted = null
-}) => {
-  // Récupérer productId soit depuis les props (mode popup) soit depuis l'URL (mode page)
+// Icons from Heroicons
+import { 
+  HeartIcon, 
+  ArrowLeftIcon, 
+  PencilIcon, 
+  TrashIcon, 
+  ChatBubbleLeftIcon, 
+  ShieldCheckIcon,
+  CameraIcon,
+  TagIcon,
+  SwatchIcon,
+  UserCircleIcon,
+  CheckCircleIcon,
+  ShoppingBagIcon,
+  XMarkIcon,
+  InformationCircleIcon,
+  StarIcon
+} from "@heroicons/react/24/outline";
+
+const API_BASE_URL = "http://localhost:8000";
+
+/**
+ * Enhanced Product Detail component with modern UI and animations
+ */
+const ProductDetail = ({ productId: propProductId, onProductLoaded }) => {
+  // Retrieve productId from props or URL params
   const { productId: paramProductId } = useParams();
   const productId = propProductId || paramProductId;
-  
   const navigate = useNavigate();
-  const location = useLocation();
-
+  
+  // State management
   const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingState, setLoadingState] = useState({
+    product: true,
+    favorite: true,
+  });
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [inCart, setInCart] = useState(false);
-  const [currentImage, setCurrentImage] = useState(0);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [showPopup, setShowPopup] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
+  const [userState, setUserState] = useState({
+    currentUser: null,
+    isOwner: false,
+    isAdmin: false,
+  });
+  const [activeTab, setActiveTab] = useState('details'); // 'details' or 'comments'
+  
+  // Cart integration
   const cartContext = useCart();
+  const { addToCart, removeFromCart, cart = [] } = cartContext || {};
+  const [inCart, setInCart] = useState(false);
   
-  if (!cartContext) {
-    console.error("❌ useCart() est `undefined`. Assurez-vous d'envelopper votre application avec `<CartProvider>`.");
-  }
-  
-  const { addToCart: contextAddToCart, removeFromCart: contextRemoveFromCart, cart } = cartContext || { 
-    cart: [], 
-    addToCart: () => {}, 
-    removeFromCart: () => {} 
-  };
-
-  // Récupérer l'utilisateur courant
+  // Fetch current user
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
         const userData = await fetchUser();
         if (userData.success) {
-          setCurrentUser(userData.user);
-          setIsAdmin(userData.user.role === 'admin');
+          setUserState({
+            currentUser: userData.user,
+            isAdmin: userData.user.role === 'admin',
+            isOwner: false, // Will be updated when product is loaded
+          });
         }
       } catch (err) {
-        console.error("Erreur lors de la récupération de l'utilisateur courant:", err);
+        console.error("Error fetching current user:", err);
       }
     };
 
     getCurrentUser();
   }, []);
 
-  // Récupérer les informations du produit  
+  // Fetch product data
   useEffect(() => {
     const getProductData = async () => {
       try {
-        setLoading(true);
+        setLoadingState(prev => ({ ...prev, product: true }));
         const data = await fetchProducts();
         const foundProduct = data.products.find(p => p._id === productId);
 
         if (!foundProduct) {
-          setError("Produit non trouvé");
+          setError("Product not found");
         } else {
           setProduct(foundProduct);
+          if (onProductLoaded) {
+            onProductLoaded(foundProduct);
+          }
 
-          // Vérifier si l'utilisateur connecté est le vendeur du produit
-          if (currentUser && foundProduct.seller &&
-            currentUser._id === foundProduct.seller._id) {
-            setIsOwner(true);
+          // Check if current user is the seller
+          if (userState.currentUser && foundProduct.seller &&
+              userState.currentUser._id === foundProduct.seller._id) {
+            setUserState(prev => ({ ...prev, isOwner: true }));
           }
         }
       } catch (err) {
-        setError("Erreur lors du chargement du produit");
-        console.error("Erreur de chargement du produit:", err);
+        setError("Error loading product");
+        console.error("Error loading product:", err);
       } finally {
-        setLoading(false);
+        setLoadingState(prev => ({ ...prev, product: false }));
       }
     };
 
-    getProductData();
-  }, [productId, currentUser]);
+    if (productId) {
+      getProductData();
+    }
+  }, [productId, userState.currentUser]);
 
-  // Vérifier si le produit est dans les favoris et dans le panier
+  // Check if product is favorite and in cart
   useEffect(() => {
     const loadFavorites = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) return;
+        if (!token) {
+          setLoadingState(prev => ({ ...prev, favorite: false }));
+          return;
+        }
 
-        const response = await axios.get("http://localhost:8000/api/v2/favorites", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        setLoadingState(prev => ({ ...prev, favorite: true }));
+        const response = await axios.get(`${API_BASE_URL}/api/v2/favorites`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         if (response.data.success && response.data.data) {
@@ -986,179 +135,183 @@ const ProductDetail = ({
             .filter(fav => fav && fav.product)
             .map(fav => fav.product._id);
           
-          // Mettre à jour l'état isFavorite si le produit est dans les favoris
           setIsFavorite(favoriteIds.includes(productId));
         }
       } catch (error) {
-        console.error("❌ Erreur lors du chargement des favoris:", error.response?.data || error);
+        console.error("Error loading favorites:", error);
+      } finally {
+        setLoadingState(prev => ({ ...prev, favorite: false }));
       }
     };
 
     loadFavorites();
     
-    // Vérifier si le produit est dans le panier
-    if (cart && cart.length > 0 && productId) {
+    // Check if product is in cart
+    if (cart?.length > 0 && productId) {
       const isProductInCart = cart.some(item => item.product?._id === productId);
       setInCart(isProductInCart);
     }
   }, [productId, cart]);
 
-  // Fonction utilitaire pour construire l'URL de l'image
-  const getImageUrl = (imageUrl) => {
+  // Utility function to build image URL
+  const getImageUrl = useCallback((imageUrl) => {
     if (!imageUrl) return "";
+    return imageUrl.startsWith("http") ? imageUrl : `${API_BASE_URL}/${imageUrl}`;
+  }, []);
 
-    return imageUrl.startsWith("http")
-      ? imageUrl
-      : `http://localhost:8000/${imageUrl}`;
-  };
-
-  // Gérer l'ajout aux favoris
+  // Toggle favorite status
   const toggleFavorite = async () => {
-    if (!currentUser) {
-      setShowPopup(true);
+    if (!userState.currentUser) {
+      setShowAuthPopup(true);
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("❌ Aucun token trouvé !");
-        return;
-      }
+      if (!token) return;
 
       if (isFavorite) {
-        // Supprimer des favoris
-        await axios.delete(`http://localhost:8000/api/v2/favorites/${productId}`, {
+        await axios.delete(`${API_BASE_URL}/api/v2/favorites/${productId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-
         setIsFavorite(false);
-        console.log("✅ Produit retiré des favoris");
       } else {
-        // Ajouter aux favoris
-        await axios.post("http://localhost:8000/api/v2/favorites",
+        await axios.post(`${API_BASE_URL}/api/v2/favorites`,
           { productId },
           { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
         );
-
         setIsFavorite(true);
-        console.log("✅ Produit ajouté aux favoris");
       }
     } catch (error) {
-      console.error("❌ Erreur lors de la gestion des favoris :", error.response?.data || error);
+      console.error("Error toggling favorite:", error);
+      toast.error("Failed to update favorites");
     }
   };
 
-  // Gérer l'ajout au panier
+  // Toggle cart status
   const toggleCart = async () => {
-    if (!currentUser) {
-      setShowPopup(true);
+    if (!userState.currentUser) {
+      setShowAuthPopup(true);
       return;
     }
 
     try {
-      const cartItem = cart.find(item => item.product?._id === productId);
+      const cartItem = cart?.find(item => item.product?._id === productId);
       
       if (cartItem) {
-        await contextRemoveFromCart(cartItem._id);
+        await removeFromCart(cartItem._id);
         setInCart(false);
-        console.log("✅ Produit retiré du panier");
       } else {
-        await contextAddToCart(productId, 1);
+        await addToCart(productId, 1);
         setInCart(true);
-        console.log("✅ Produit ajouté au panier");
       }
     } catch (error) {
-      console.error("❌ Erreur lors de l'ajout/suppression du panier", error);
+      console.error("Error toggling cart:", error);
+      toast.error("Failed to update cart");
     }
   };
 
-  // Fermer le popup
-  const handleClosePopup = () => {
-    setShowPopup(false);
-  };
+  // Contact seller
+// Modifier la fonction contactSeller dans ProductDetail.jsx
+const contactSeller = async () => {
+  if (!userState.currentUser) {
+    setShowAuthPopup(true);
+    return;
+  }
 
-  // Changer l'image affichée
-  const handleImageChange = (index) => {
-    setCurrentImage(index);
-  };
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/v2/conversations/start`,
+      { userId: product.seller._id }, // Changer receiverId en userId
+      { 
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true 
+      }
+    );
 
-  // Gérer l'erreur de chargement de l'avatar
-  const handleAvatarError = () => {
-    setAvatarError(true);
-  };
-
-  // Fonction pour contacter le vendeur
-  const handleContactSeller = async () => {
-    if (!currentUser) {
-      setShowPopup(true);
-      return;
+    if (response.data.success) {
+      navigate(`/messages/${response.data.conversationId}`);
+    } else {
+      toast.error(response.data.message || "Erreur lors de la création de la conversation");
     }
-  
+  } catch (error) {
+    console.error("Error creating conversation:", error);
+    toast.error("Échec du démarrage de la conversation");
+  }
+};
+
+  // Delete product
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+
     try {
-      // Appeler l'API pour démarrer ou récupérer une conversation
-      const response = await axios.post(
-        "http://localhost:8000/api/v2/conversations/start",
-        { receiverId: product.seller._id },
-        { withCredentials: true }
-      );
-  
-      const conversationId = response.data.conversationId;
-  
-      // Rediriger vers la page de conversation
-      navigate(`/messages/${conversationId}`);
-    } catch (error) {
-      console.error("❌ Erreur lors de la création de la conversation :", error);
+      const response = await deleteProduct(productId);
+      if (response.success) {
+        toast.success("Product deleted successfully");
+        navigate(userState.isAdmin ? "/Admin" : "/Profil");
+      } else {
+        toast.error(response?.message || "Error deleting product");
+      }
+    } catch (err) {
+      console.error("Error deleting product:", err);
+      toast.error("An error occurred while deleting the product");
     }
   };
 
-  // Fonction pour afficher l'avatar du vendeur de manière sécurisée
+  // Edit product
+  const handleEdit = () => {
+    navigate(`/Sell/${productId}`);
+  };
+
+  // Render seller avatar safely
   const renderSellerAvatar = () => {
-    // Vérifie si le vendeur existe
-    if (!product.seller) {
+    // If no seller
+    if (!product?.seller) {
       return (
         <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-          <span className="text-lg font-bold text-amber-600">?</span>
+          <UserCircleIcon className="h-8 w-8 text-amber-600" />
         </div>
       );
     }
 
-    // Si l'avatar existe et n'a pas d'erreur
-    if (product.seller.avatar && !avatarError) {
-      let avatarUrl;
-      
-      if (typeof product.seller.avatar === 'object' && product.seller.avatar.url) {
-        // Cas où l'avatar est un objet avec une propriété url
-        avatarUrl = product.seller.avatar.url.startsWith("http") 
-          ? product.seller.avatar.url 
-          : `http://localhost:8000${product.seller.avatar.url}`;
-      } else if (typeof product.seller.avatar === 'string') {
-        // Cas où l'avatar est directement une chaîne de caractères
-        avatarUrl = product.seller.avatar.startsWith("http") 
-          ? product.seller.avatar 
-          : `http://localhost:8000/${product.seller.avatar}`;
-      } else {
-        // Si format non reconnu, utilisez une valeur par défaut
-        return (
-          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-            <span className="text-lg font-bold text-amber-600">
-              {product.seller.name?.charAt(0) || "?"}
-            </span>
-          </div>
-        );
-      }
+    // Try to get avatar URL
+    let avatarUrl;
+    if (typeof product.seller.avatar === 'object' && product.seller.avatar?.url) {
+      avatarUrl = product.seller.avatar.url.startsWith("http") 
+        ? product.seller.avatar.url 
+        : `${API_BASE_URL}${product.seller.avatar.url}`;
+    } else if (typeof product.seller.avatar === 'string') {
+      avatarUrl = product.seller.avatar.startsWith("http") 
+        ? product.seller.avatar 
+        : `${API_BASE_URL}/${product.seller.avatar}`;
+    }
 
+    // If we have a valid URL, show image
+    if (avatarUrl) {
       return (
-        <img
-          src={avatarUrl}
-          alt={product.seller.name || "Vendeur"}
-          className="w-12 h-12 rounded-full object-cover ring-2 ring-amber-200"
-          onError={handleAvatarError}
-        />
+        <div className="w-12 h-12 relative rounded-full overflow-hidden ring-2 ring-amber-200">
+          <img
+            src={avatarUrl}
+            alt={product.seller.name || "Seller"}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.style.display = 'none';
+              e.target.parentNode.classList.add('flex', 'items-center', 'justify-center', 'bg-amber-100');
+              const fallback = document.createElement('span');
+              fallback.className = 'text-lg font-bold text-amber-600';
+              fallback.textContent = product.seller.name?.charAt(0) || "?";
+              e.target.parentNode.appendChild(fallback);
+            }}
+          />
+        </div>
       );
     }
 
-    // Fallback: affiche la première lettre du nom du vendeur
+    // Fallback: show first letter of seller name
     return (
       <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
         <span className="text-lg font-bold text-amber-600">
@@ -1168,383 +321,424 @@ const ProductDetail = ({
     );
   };
 
-  // Fonction pour supprimer le produit
-  const handleDelete = async () => {
-    if (!window.confirm("Voulez-vous vraiment supprimer ce produit ?")) return;
-
-    try {
-      const response = await deleteProduct(productId);
-      if (response.success) {
-        toast.success("Produit supprimé avec succès");
-        
-        // Si c'est en mode popup, informer le parent et fermer
-        if (isPopup) {
-          if (onProductDeleted) {
-            onProductDeleted(productId);
-          }
-          if (onClose) {
-            onClose();
-          }
-        } else {
-          // Sinon, rediriger vers la page appropriée
-          navigate(isAdmin ? "/Admin" : "/Profil");
-        }
-      } else {
-        toast.error(response?.message || "Erreur lors de la suppression");
-      }
-    } catch (err) {
-      console.error("Erreur lors de la suppression:", err);
-      toast.error("Une erreur est survenue lors de la suppression");
-    }
-  };
-
-  // Fonction pour modifier le produit
-  const handleEdit = () => {
-    navigate(`/Sell/${productId}`);
-  };
-
-  if (loading) {
-    return isPopup ? (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-amber-500"></div>
-          </div>
-        </div>
-      </div>
-    ) : (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-amber-500"></div>
-      </div>
-    );
-  }
-
-  if (error || !product) {
-    if (isPopup) {
-      return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-red-600">Erreur</h2>
-              <button 
-                onClick={onClose} 
-                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-              >
-                <FiX size={24} />
-              </button>
-            </div>
-            <p className="text-center text-gray-700 my-6">{error || "Produit non trouvé"}</p>
-          </div>
-        </div>
-      );
-    }
+  // Render properties in a visually appealing way
+  const renderProperty = (label, value, icon = null) => {
+    if (!value) return null;
     
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-neutral-50">
-        <div className="text-xl text-neutral-700 mb-4 font-light">{error || "Produit non trouvé"}</div>
-        <button
-          onClick={() => navigate(-1)}
-          className="px-6 py-2.5 bg-amber-500 text-white rounded-full hover:bg-amber-600 transition shadow-md flex items-center"
+      <div className="flex items-center gap-3 text-neutral-700">
+        <div className="rounded-full p-2 bg-amber-100 text-amber-700">
+          {icon}
+        </div>
+        <div>
+          <span className="text-xs text-neutral-500 uppercase font-medium block">{label}</span>
+          <span className="font-medium">{value}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Loading state
+  if (loadingState.product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-amber-50 to-white">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="relative w-16 h-16"
         >
-          <FiArrowLeft className="mr-2" /> Retour aux produits
-        </button>
+          <div className="absolute inset-0 rounded-full border-t-4 border-amber-500 animate-spin"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-amber-200 opacity-30"></div>
+        </motion.div>
       </div>
     );
   }
 
-  // Contenu principal du détail produit qui sera utilisé dans les deux modes
-  const productContent = (
-    <>
-      {/* Titre et ID du produit */}
-      <div className={`px-${isPopup ? '4' : '8'} pt-${isPopup ? '2' : '8'} pb-2 flex justify-between items-start`}>
-        <div>
-          <h1 className={`text-${isPopup ? '2xl' : '3xl'} font-bold text-neutral-800 mb-${isPopup ? '1' : '2'}`}>{product.name}</h1>
-          <p className="text-neutral-500 text-sm font-medium">
-            ID: {product._id}
-          </p>
-        </div>
-        {!isPopup && (
-          <button
-            onClick={toggleFavorite}
-            className="p-3 rounded-full hover:bg-neutral-100 transition-all duration-200 group"
-            aria-label="Ajouter aux favoris"
-          >
-            <FiHeart
-              size={24}
-              className={`transition duration-300 ${
-                isFavorite 
-                  ? 'text-red-500 fill-red-500' 
-                  : 'text-neutral-400 group-hover:text-red-500'
-              }`}
-            />
-          </button>
-        )}
-      </div>
-
-      {/* Prix */}
-      <div className={`px-${isPopup ? '4' : '8'} mb-${isPopup ? '4' : '6'}`}>
-        <p className={`text-${isPopup ? '2xl' : '3xl'} font-bold text-amber-600`}>{product.price} DA</p>
-        {product.oldPrice && (
-          <p className="text-neutral-500 line-through text-sm mt-1">
-            {product.oldPrice} DA
-          </p>
-        )}
-      </div>
-
-      {/* Galerie d'images */}
-      <div className={`px-${isPopup ? '4' : '6 md:px-8'}`}>
-        <div className={`relative h-${isPopup ? '64' : '80 md:h-96'} bg-neutral-50 rounded-xl overflow-hidden mb-4 flex items-center justify-center`}>
-          {product.images && product.images.length > 0 ? (
-            <img
-              src={getImageUrl(product.images[currentImage]?.url)}
-              alt={product.name}
-              className="h-full object-contain transition duration-300 ease-in-out"
-            />
-          ) : (
-            <div className="text-neutral-400">Aucune image disponible</div>
-          )}
-        </div>
-
-        {/* Miniatures avec animation et effet hover */}
-        {product.images && product.images.length > 1 && (
-          <div className="flex overflow-x-auto gap-3 py-2 scrollbar-thin scrollbar-thumb-amber-200 pb-4">
-            {product.images.map((img, idx) => (
-              <div
-                key={idx}
-                className={`relative w-${isPopup ? '16' : '20'} h-${isPopup ? '16' : '20'} flex-shrink-0 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 ${
-                  currentImage === idx 
-                    ? 'ring-2 ring-amber-500 shadow-md transform scale-105' 
-                    : 'opacity-80 hover:opacity-100'
-                }`}
-                onClick={() => handleImageChange(idx)}
-              >
-                <img
-                  src={getImageUrl(img.url)}
-                  alt={`Miniature ${idx + 1}`}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Caractéristiques du produit */}
-      <div className={`mt-${isPopup ? '6' : '8'} px-${isPopup ? '4' : '8'}`}>
-        <h2 className={`text-lg font-semibold text-neutral-700 mb-${isPopup ? '2' : '4'} flex items-center`}>
-          <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-          Caractéristiques
-        </h2>
-        <div className={`grid grid-cols-1 ${isPopup ? 'sm:grid-cols-2' : 'md:grid-cols-2'} gap-${isPopup ? '2' : '4'} bg-neutral-50 rounded-xl p-${isPopup ? '4' : '5'}`}>
-          {product.category && (
-            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Catégorie</p>
-              <p className="font-medium text-neutral-700">{product.category.name || "Non spécifié"}</p>
-            </div>
-          )}
-          {product.subCategory && (
-            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Sous-catégorie</p>
-              <p className="font-medium text-neutral-700">{product.subCategory.name || "Non spécifié"}</p>
-            </div>
-          )}
-          {product.size && (
-            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Taille</p>
-              <p className="font-medium text-neutral-700">{product.size.name}</p>
-            </div>
-          )}
-          {product.brand && (
-            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Marque</p>
-              <p className="font-medium text-neutral-700">{product.brand}</p>
-            </div>
-          )}
-          {product.color && (
-            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">Couleur</p>
-              <p className="font-medium text-neutral-700">{product.color}</p>
-            </div>
-          )}
-          {product.condition && (
-            <div className={`p-${isPopup ? '2' : '3'} rounded-lg border border-neutral-200 bg-white`}>
-              <p className="text-xs text-amber-600 uppercase font-semibold mb-1">État</p>
-              <p className="font-medium text-neutral-700">{product.condition}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Description */}
-      {product.description && (
-        <div className={`mt-6 px-${isPopup ? '4' : '8'}`}>
-          <h2 className={`text-lg font-semibold text-neutral-700 mb-${isPopup ? '2' : '3'} flex items-center`}>
-            <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-            Description
-          </h2>
-          <div className={`bg-white p-${isPopup ? '3' : '4'} rounded-xl border border-neutral-200`}>
-            <p className="text-neutral-600 leading-relaxed">{product.description}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Vendeur */}
-      <div className={`mt-6 ${isPopup ? 'px-4' : 'mx-8'}`}>
-        <div className={`flex items-center ${!isPopup && !isOwner && product.seller ? 'justify-between' : ''} p-${isPopup ? '3' : '4'} bg-amber-50 rounded-xl border border-amber-100`}>
-          <div className="flex items-center">
-            {product.seller && renderSellerAvatar()}
-            <div className="ml-3">
-              <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
-              <p className="font-medium text-neutral-800">
-                {product.seller?.name || "Vendeur inconnu"}
-              </p>
-            </div>
-          </div>
-          {!isPopup && !isOwner && product.seller && (
-            <button
-              onClick={handleContactSeller}
-              className="px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors flex items-center shadow-sm"
-            >
-              <FiMessageCircle className="mr-2" />
-              Contacter le vendeur
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Boutons d'action */}
-      <div className={`mt-${isPopup ? '6' : '8'} px-${isPopup ? '4' : '8'} pb-${isPopup ? '4' : '8'}`}>
-        {isPopup ? (
-          // Mode popup (admin): uniquement bouton de suppression
-          <button
-            onClick={handleDelete}
-            className="w-full py-3 px-4 rounded-xl flex items-center justify-center bg-red-600 hover:bg-red-700 text-white transition-colors shadow-md hover:shadow-lg"
-          >
-            <FiTrash2 className="mr-2" />
-            Supprimer ce produit
-          </button>
-        ) : isOwner ? (
-          // Mode propriétaire: modifier et supprimer
-          <div className="flex space-x-4">
-            <button
-              onClick={handleEdit}
-              className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-md hover:shadow-lg"
-            >
-              <FiEdit2 className="mr-2" />
-              Modifier
-            </button>
-            <button
-              onClick={handleDelete}
-              className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-neutral-700 hover:bg-neutral-800 text-white transition-colors shadow-md hover:shadow-lg"
-            >
-              <FiTrash2 className="mr-2" />
-              Supprimer
-            </button>
-          </div>
-        ) : (
-          // Mode client: ajouter ou retirer du panier
-          <button
-            onClick={toggleCart}
-            className={`w-full py-4 px-6 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
-              inCart
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-amber-500 hover:bg-amber-600 text-white'
-            }`}
-          >
-            <HiOutlineShoppingBag size={22} className="mr-2" />
-            {inCart ? 'Retirer du panier' : 'Ajouter au panier'}
-          </button>
-        )}
-      </div>
-    </>
-  );
-
-  // Affichage différent selon le mode (popup ou page)
-  if (isPopup) {
+  // Error state
+  if (error || !product) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
-          {/* En-tête avec bouton de fermeture */}
-          <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-            <div className="flex items-center">
-              <h2 className="text-xl font-bold text-neutral-800">Détails du produit</h2>
-              <div className="ml-3 flex items-center bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">
-                <FiShield className="w-3 h-3 mr-1" />
-                Mode Admin
-              </div>
-            </div>
-            <button 
-              onClick={onClose} 
-              className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-            >
-              <FiX size={24} />
-            </button>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-amber-50 to-white">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="text-xl text-neutral-700 mb-4 font-light flex items-center">
+            <XMarkIcon className="w-6 h-6 text-red-500 mr-2" />
+            {error || "Product not found"}
           </div>
-
-          <div className="p-6">
-            {productContent}
-          </div>
-        </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(-1)}
+            className="px-6 py-2.5 bg-amber-500 text-white rounded-full hover:bg-amber-600 transition shadow-md flex items-center"
+          >
+            <ArrowLeftIcon className="w-5 h-5 mr-2" /> Retour aux produits
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50/50 to-white pt-10 pb-16">
-      {showPopup && (
-        <Popup
-          message="Vous devez être connecté pour effectuer cette action."
-          onClose={handleClosePopup}
-        />
-      )}
-
-      <div className="container mx-auto px-4 max-w-6xl">
-        {/* Navigation */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center text-amber-700 hover:text-amber-900 transition font-medium group"
-          >
-            <FiArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform" /> 
-            Retour aux produits
-          </button>
-        </div>
-
-        {/* Badge Mode Admin si admin */}
-        {isAdmin && (
-          <div className="mb-5 inline-flex items-center bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-sm">
-            <FiShield className="w-4 h-4 mr-1.5" />
-            Mode Administrateur
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50/30 via-white to-amber-50/20 py-12">
+      <AnimatePresence>
+        {showAuthPopup && (
+          <Popup
+            message="You must be logged in to perform this action."
+            onClose={() => setShowAuthPopup(false)}
+          />
         )}
+      </AnimatePresence>
 
-        {/* Mise en page adaptée selon le mode */}
-        <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-1' : 'lg:grid-cols-3'} gap-8`}>
-          {/* Colonne principale: infos produit */}
-          <div className={isAdmin ? "w-full" : "lg:col-span-2"}>
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full">
-              {/* Section principale - Photos et infos produit */}
-              <div className="md:flex flex-col">
-                {productContent}
-              </div>
-            </div>
-          </div>
-
-          {/* Colonne des commentaires (uniquement en mode normal) */}
-          {!isAdmin && (
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-neutral-100 h-full p-6">
-                <h2 className="text-xl font-bold text-neutral-800 mb-6 flex items-center">
-                  <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
-                  Avis & Commentaires
-                </h2>
-                <ProductComments productId={productId} />
-              </div>
-            </div>
+      <div className="container mx-auto px-4 max-w-7xl">
+        {/* Navigation & Admin Badge */}
+        <div className="flex justify-between items-center mb-6">
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center text-amber-700 hover:text-amber-900 transition font-medium group"
+            >
+              <ArrowLeftIcon className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" /> 
+              Retour aux produits
+            </button>
+          </motion.div>
+          
+          {userState.isAdmin && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="inline-flex items-center bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 px-3 py-1.5 rounded-full text-sm shadow-sm"
+            >
+              <ShieldCheckIcon className="w-4 h-4 mr-1.5" />
+              Mode Administrateur
+            </motion.div>
           )}
         </div>
-      </div>
-    </div>
+
+        {/* Main Content */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Column - Images & Thumbnails - Now in a sticky container */}
+          <div className="lg:w-2/5 lg:sticky lg:top-4 lg:self-start">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-3xl shadow-lg overflow-hidden p-6"
+            >
+              {/* Main Image with Favorite Button Overlay */}
+              <div className="relative">
+                <div className="relative aspect-square mb-4 bg-neutral-50 rounded-2xl overflow-hidden flex items-center justify-center">
+                  {product.images && product.images.length > 0 ? (
+                    <motion.img
+                      key={currentImageIndex}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      src={getImageUrl(product.images[currentImageIndex]?.url)}
+                      alt={product.name}
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-neutral-400">
+                      <CameraIcon className="w-12 h-12 mb-2" />
+                      <p>No images available</p>
+                    </div>
+                  )}
+                  
+                  {/* Favorite Button as Overlay */}
+                  <motion.button
+                    whileHover={{ scale: 1.15 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={toggleFavorite}
+                    disabled={loadingState.favorite}
+                    className="absolute top-3 right-3 p-3 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-all duration-200 shadow-md"
+                    aria-label="Add to favorites"
+                  >
+                    <HeartIcon
+                      className={`w-6 h-6 transition-all duration-300 ${
+                        isFavorite 
+                          ? 'text-red-500 fill-red-500' 
+                          : 'text-neutral-400 hover:text-red-500'
+                      }`}
+                    />
+                  </motion.button>
+                </div>
+
+                {/* Image Thumbnails */}
+                {product.images && product.images.length > 1 && (
+                  <div className="flex justify-center gap-2 mb-6">
+                    {product.images.map((img, idx) => (
+                      <motion.div
+                        key={idx}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`relative w-16 h-16 flex-shrink-0 rounded-lg cursor-pointer transition-all duration-200 ${
+                          currentImageIndex === idx 
+                            ? 'ring-2 ring-amber-500 shadow-md' 
+                            : 'opacity-70 hover:opacity-100'
+                        }`}
+                        onClick={() => setCurrentImageIndex(idx)}
+                      >
+                        <img
+                          src={getImageUrl(img.url)}
+                          alt={`Thumbnail ${idx + 1}`}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pricing Information */}
+              <div className="mb-6 bg-amber-50 rounded-2xl p-5 border border-amber-100">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <p className="text-sm text-amber-700 font-medium mb-1">Prix</p>
+                    <div className="flex items-baseline">
+                      <p className="text-3xl font-bold text-amber-600">
+                        {product.price} DA
+                      </p>
+                      {product.oldPrice && (
+                        <p className="text-neutral-500 line-through text-sm ml-3 mt-1">
+                          {product.oldPrice} DA
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Stock indicator */}
+                  <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                    
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+              {!userState.isOwner && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={toggleCart}
+                  className={`w-full py-4 px-6 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
+                    inCart
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white'
+                  }`}
+                >
+                  <ShoppingBagIcon className="w-5 h-5 mr-2" />
+                  {inCart ? 'Retirer du panier' : 'Ajouter au panier'}
+                </motion.button>
+                 )}
+                {!userState.isOwner && product.seller && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={contactSeller}
+                    className="w-full py-4 px-6 rounded-xl flex items-center justify-center bg-white border border-amber-300 text-amber-700 hover:bg-amber-50 transition-colors shadow-sm"
+                  >
+                    <ChatBubbleLeftIcon className="w-5 h-5 mr-2" />
+                    Contacter le vendeur
+                  </motion.button>
+                )}
+
+                {/* Owner Actions */}
+                {userState.isOwner && (
+                  <div className="flex space-x-3">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleEdit}
+                      className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-md hover:shadow-lg"
+                    >
+                      <PencilIcon className="w-5 h-5 mr-2" />
+                      Modifier
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleDelete}
+                      className="w-1/2 py-3.5 px-4 rounded-xl flex items-center justify-center bg-neutral-700 hover:bg-neutral-800 text-white transition-colors shadow-md hover:shadow-lg"
+                    >
+                      <TrashIcon className="w-5 h-5 mr-2" />
+                      Supprimer
+                    </motion.button>
+                  </div>
+                )}
+              </div>
+
+              {/* Seller Card - Move from the main section to here */}
+              <div className="mt-6">
+                <motion.div 
+                  whileHover={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+                  className="flex items-center p-5 bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-xl border border-amber-100"
+                >
+                  <div className="flex items-center">
+                    {product.seller && renderSellerAvatar()}
+                    <div className="ml-3">
+                      <p className="text-xs text-amber-800 uppercase font-semibold">Vendu par</p>
+                      <p className="font-medium text-neutral-800">
+                        {product.seller?.name || "Vendeur inconnu"}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+          <div className="lg:w-3/5">
+                <motion.div 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white rounded-3xl shadow-lg overflow-hidden"
+                >
+                  {/* Header Section */}
+                  <div className="bg-gradient-to-r from-amber-50 to-white p-8 border-b border-amber-100">
+                    <h1 className="text-3xl font-bold text-neutral-800 mb-4">
+                      {product.name}
+                    </h1>
+                    
+                    {/* Quick Properties / Tags */}
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {product.brand && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                          {product.brand}
+                        </span>
+                      )}
+                      {product.condition && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {product.condition}
+                        </span>
+                      )}
+                      {product.category && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                          {product.category.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tab Navigation */}
+                  <div className="border-b border-neutral-200">
+                    <div className="flex">
+                      <button
+                        onClick={() => setActiveTab('details')}
+                        className={`flex-1 px-5 py-4 text-center font-medium transition-colors relative ${
+                          activeTab === 'details' 
+                            ? 'text-amber-600' 
+                            : 'text-neutral-500 hover:text-neutral-800'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center">
+                          <InformationCircleIcon className="w-5 h-5 mr-2" />
+                          Détails
+                        </div>
+                        {activeTab === 'details' && (
+                          <motion.div 
+                            layoutId="activeTab"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500"
+                          />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('comments')}
+                        className={`flex-1 px-5 py-4 text-center font-medium transition-colors relative ${
+                          activeTab === 'comments' 
+                            ? 'text-amber-600' 
+                            : 'text-neutral-500 hover:text-neutral-800'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center">
+                          <ChatBubbleLeftIcon className="w-5 h-5 mr-2" />
+                          Commentaires
+                        </div>
+                        {activeTab === 'comments' && (
+                          <motion.div 
+                            layoutId="activeTab"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500"
+                          />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tab Content */}
+                  <div className="p-8">
+                    {activeTab === 'details' ? (
+                      <div>
+                        {/* Product Details */}
+                        <div className="space-y-8">
+                          {/* Product Characteristics in modern grid layout */}
+                          <div>
+                            <h2 className="text-xl font-semibold text-neutral-800 mb-6 flex items-center">
+                              <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
+                              Caractéristiques
+                            </h2>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-neutral-50 rounded-2xl p-6">
+                              {product.category && renderProperty('Category', product.category.name, <TagIcon className="w-5 h-5" />)}
+                              {product.subCategory && renderProperty('Subcategory', product.subCategory.name, <TagIcon className="w-5 h-5" />)}
+                              {product.size && renderProperty('Size', product.size.name, <TagIcon className="w-5 h-5" />)}
+                              {product.brand && renderProperty('Brand', product.brand, <StarIcon className="w-5 h-5" />)}
+                              
+                              {product.color && (
+                                <div className="flex items-center gap-3 text-neutral-700">
+                                  <div className="rounded-full p-2 bg-amber-100 text-amber-700">
+                                    <SwatchIcon className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <span className="text-xs text-neutral-500 uppercase font-medium block">Color</span>
+                                    <div className="flex items-center">
+                                      <div 
+                                        className="w-4 h-4 rounded-full mr-2 border border-neutral-200" 
+                                        style={{ backgroundColor: product.color.toLowerCase() }}
+                                      ></div>
+                                      <span className="font-medium">{product.color}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {product.condition && renderProperty('Condition', product.condition, <CheckCircleIcon className="w-5 h-5" />)}
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          {product.description && (
+                            <div>
+                              <h2 className="text-xl font-semibold text-neutral-800 mb-4 flex items-center">
+                                <span className="w-1.5 h-5 bg-amber-500 rounded-sm mr-2"></span>
+                                Description
+                              </h2>
+                              <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-gradient-to-br from-white to-amber-50 p-6 rounded-2xl border border-amber-100 shadow-sm"
+                              >
+                                <p className="text-neutral-700 leading-relaxed">{product.description}</p>
+                              </motion.div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="min-h-[400px]">
+                        <ProductComments productId={productId} />
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+    
   );
 };
 

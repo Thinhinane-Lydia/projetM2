@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchCommentsByProduct, createComment, deleteComment, fetchUser } from "../../utils/api";
-import { FiSend, FiTrash2 } from "react-icons/fi";
+import { FiSend, FiTrash2, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Composant MiniRatingSelector modernisé pour la sélection des étoiles
@@ -186,6 +186,7 @@ const ProductComments = ({ productId, onRatingUpdate }) => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [averageRating, setAverageRating] = useState(0);
+  const [showComments, setShowComments] = useState(false); // État pour afficher/masquer les commentaires
 
   // Récupérer l'utilisateur courant
   useEffect(() => {
@@ -285,6 +286,11 @@ const ProductComments = ({ productId, onRatingUpdate }) => {
         const avgRating = calculateAverageRating(updatedComments);
         setAverageRating(avgRating);
         
+        // Afficher automatiquement les commentaires si masqués
+        if (!showComments) {
+          setShowComments(true);
+        }
+        
         // Notifier le composant parent
         if (onRatingUpdate) {
           onRatingUpdate({
@@ -348,169 +354,202 @@ const ProductComments = ({ productId, onRatingUpdate }) => {
     setRating(value);
   };
 
+  // Basculer l'affichage des commentaires
+  const toggleComments = () => {
+    setShowComments(!showComments);
+  };
+
   return (
-    <div className="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="p-5">
-        <h2 className="text-xl font-bold text-neutral-800 mb-4 flex items-center">
-          <span className="bg-amber-100 text-amber-600 p-1.5 rounded-lg mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
+    <div className="mt-6 bg-white rounded-xl shadow-md">
+      <div className="border-b border-neutral-100 p-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <span className="font-medium text-neutral-800">
+            Qu'en pensez-vous ?
           </span>
-          Avis clients
-        </h2>
-        
-        {/* Formulaire de commentaire */}
-        {currentUser ? (
-          <motion.form 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onSubmit={handleSubmitComment} 
-            className="mb-5 bg-gradient-to-br from-neutral-50 to-amber-50 p-4 rounded-lg border border-neutral-100 shadow-sm"
+          {comments.length > 0 && (
+            <div className="flex items-center ml-3 text-xs text-neutral-500">
+              <span>{comments.length} avis</span>
+              <div className="ml-2">
+                <MiniRatingDisplay rating={averageRating} showValue={false} />
+              </div>
+            </div>
+          )}
+        </div>
+        {comments.length > 0 && (
+          <motion.button 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleComments}
+            className="flex items-center text-sm text-blue-600 hover:underline transition px-2 py-1 rounded-full hover:bg-blue-50"
           >
+            {showComments ? (
+              <>
+                <span className="mr-1">Masquer les avis</span>
+                <FiChevronUp size={16} />
+              </>
+            ) : (
+              <>
+                <span className="mr-1">Voir les avis</span>
+                <FiChevronDown size={16} />
+              </>
+            )}
+          </motion.button>
+        )}
+      </div>
+      
+      {/* Zone de commentaire */}
+      <div className="p-4">
+        {currentUser ? (
+          <form onSubmit={handleSubmitComment} className="mb-5">
             <div className="mb-3">
-              <label className="block text-neutral-700 text-sm font-medium mb-1.5">Votre évaluation</label>
-              <div className="mb-1.5">
+              <div className="mb-2">
+                <label className="text-xs text-neutral-600 mb-1 block">Votre note</label>
                 <MiniRatingSelector 
                   currentRating={rating} 
                   onRatingChange={handleRatingClick} 
                   hoverState={true} 
                 />
               </div>
+              <div className="bg-neutral-100 rounded-lg p-1 relative flex items-start">
+                <textarea
+                  className="w-full p-2 bg-transparent border-none outline-none text-sm placeholder-neutral-500 resize-none min-h-16"
+                  placeholder="Ajoutez un commentaire pour lancer la conversation..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  rows="2"
+                  required
+                ></textarea>
+                <div className="self-end p-1">
+                  <button 
+                    type="submit"
+                    className="p-1.5 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                  >
+                    <FiSend size={16} />
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="mb-3">
-              <label className="block text-neutral-700 text-sm font-medium mb-1.5">Votre avis</label>
-              <textarea
-                className="w-full p-3 border border-neutral-200 rounded-lg focus:ring focus:ring-amber-200 focus:border-amber-500 outline-none transition bg-white text-sm shadow-sm"
-                rows="2"
-                placeholder="Partagez votre expérience avec ce produit..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                required
-              ></textarea>
-            </div>
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm rounded-lg hover:shadow-md transition flex items-center justify-center shadow-sm"
-            >
-              <FiSend className="mr-1.5" size={14} />
-              Publier mon avis
-            </motion.button>
-          </motion.form>
+          </form>
         ) : (
-          <div className="mb-5 bg-gradient-to-br from-neutral-50 to-amber-50 p-4 rounded-lg border border-neutral-100 text-center shadow-sm">
+          <div className="mb-5 bg-neutral-100 p-4 rounded-lg text-center">
             <p className="text-neutral-600 mb-3 text-sm">Vous devez être connecté pour laisser un avis.</p>
             <button 
               onClick={() => navigate("/login")} 
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm rounded-lg hover:shadow-md transition flex items-center justify-center mx-auto shadow-sm"
+              className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition"
             >
-              <FiSend className="mr-1.5" size={14} />
               Se connecter
             </button>
           </div>
         )}
         
-        {/* Liste des commentaires */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-neutral-700 text-sm">
-              {comments.length} avis client{comments.length !== 1 ? 's' : ''}
-            </h3>
-            
-            {comments.length > 0 && (
-              <div className="flex items-center">
-                <MiniRatingDisplay 
-                  rating={averageRating} 
-                  showValue={true} 
-                  showLabel={false}
-                />
-              </div>
-            )}
-          </div>
-          
-          {loading ? (
-            <div className="flex justify-center py-5">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
-            </div>
-          ) : comments.length === 0 ? (
-            <div className="text-center py-6 bg-gradient-to-br from-neutral-50 to-amber-50 rounded-lg shadow-sm">
-              <svg className="w-12 h-12 text-neutral-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-              </svg>
-              <p className="text-neutral-500 italic text-sm">
-                Aucun avis pour ce produit. Soyez le premier à donner votre opinion !
-              </p>
-            </div>
-          ) : (
-            <AnimatePresence>
-              <div className="space-y-4">
-                {comments.map((comment, index) => (
-                  <motion.div
-                    key={comment._id || index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="p-3 rounded-lg bg-gradient-to-br from-neutral-50 to-amber-50 hover:shadow-md transition-all duration-300 border border-neutral-100 shadow-sm"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-start">
-                        <div className="w-8 h-8 bg-gradient-to-br from-amber-200 to-amber-100 rounded-full flex items-center justify-center mr-2 shadow-sm">
-                          {comment.user && comment.user.avatar ? (
-                            <img 
-                              src={comment.user.avatar.url ? 
-                                (comment.user.avatar.url.startsWith("http") ? 
-                                  comment.user.avatar.url : 
-                                  `http://localhost:8000${comment.user.avatar.url}`) :
-                                (comment.user.avatar.startsWith("http") ? 
-                                  comment.user.avatar : 
-                                  `http://localhost:8000/${comment.user.avatar}`)}
-                              alt={comment.user && comment.user.name || "Utilisateur"} 
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-sm font-bold text-amber-600">
-                              {comment.user && comment.user.name ? comment.user.name.charAt(0).toUpperCase() : "?"}
-                            </span>
+        {/* Liste des commentaires avec animation */}
+        <AnimatePresence>
+          {showComments && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              {loading ? (
+                <div className="flex justify-center py-5">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+                </div>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-neutral-500 italic text-sm">
+                    Aucun avis pour ce produit. Soyez le premier à donner votre opinion !
+                  </p>
+                </div>
+              ) : (
+                <AnimatePresence>
+                  <div className="space-y-4">
+                    {comments.map((comment, index) => (
+                      <motion.div
+                        key={comment._id || index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="border-b border-neutral-100 pb-4 last:border-b-0"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-neutral-200 rounded-full flex items-center justify-center mr-2">
+                              {comment.user && comment.user.avatar ? (
+                                <img 
+                                  src={comment.user.avatar.url ? 
+                                    (comment.user.avatar.url.startsWith("http") ? 
+                                      comment.user.avatar.url : 
+                                      `http://localhost:8000${comment.user.avatar.url}`) :
+                                    (comment.user.avatar.startsWith("http") ? 
+                                      comment.user.avatar : 
+                                      `http://localhost:8000/${comment.user.avatar}`)}
+                                  alt={comment.user && comment.user.name || "Utilisateur"} 
+                                  className="w-8 h-8 rounded-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-sm font-bold text-neutral-500">
+                                  {comment.user && comment.user.name ? comment.user.name.charAt(0).toUpperCase() : "?"}
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-neutral-800 text-sm">
+                                {comment.user && comment.user.name ? comment.user.name : "Utilisateur anonyme"}
+                              </p>
+                              <div className="flex items-center">
+                                <span className="text-xs text-neutral-500">
+                                  {formatDate(comment.createdAt)}
+                                </span>
+                                {comment.rating > 0 && (
+                                  <div className="ml-2">
+                                    <MiniRatingDisplay rating={comment.rating} showValue={false} />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Option de suppression */}
+                          {isCommentAuthor(comment) && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleDeleteComment(comment._id)}
+                              className="p-1.5 rounded-full hover:bg-neutral-100 transition-colors"
+                            >
+                              <FiTrash2 className="text-red-600" size={14} />
+                            </motion.button>
                           )}
                         </div>
-                        <div>
-                          <p className="font-semibold text-neutral-800 text-sm">
-                            {comment.user && comment.user.name ? comment.user.name : "Utilisateur anonyme"}
-                          </p>
-                          <div className="flex items-center mt-0.5">
-                            <MiniRatingDisplay 
-                              rating={comment.rating} 
-                              showValue={true} 
-                            />
-                            <span className="text-xs text-neutral-500 ml-1.5">
-                              {formatDate(comment.createdAt)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Option de suppression */}
-                      {isCommentAuthor(comment) && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleDeleteComment(comment._id)}
-                          className="p-1.5 rounded-full hover:bg-white transition-colors"
-                        >
-                          <FiTrash2 className="text-red-600" size={14} />
-                        </motion.button>
-                      )}
-                    </div>
-                    <p className="mt-2 text-neutral-700 bg-white p-2.5 rounded-lg text-sm shadow-sm">{comment.text}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </AnimatePresence>
+                        <p className="text-neutral-700 text-sm ml-10">{comment.text}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </AnimatePresence>
+              )}
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
+        
+        {/* Message pour inciter à voir les commentaires quand ils sont masqués */}
+        {!showComments && comments.length > 0 && !loading && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-2"
+          >
+            <button 
+              onClick={toggleComments}
+              className="text-sm text-blue-600 hover:underline flex items-center justify-center mx-auto"
+            >
+              <span className="mr-1">Voir les {comments.length} avis</span>
+              <FiChevronDown size={16} />
+            </button>
+          </motion.div>
+        )}
       </div>
     </div>
   );

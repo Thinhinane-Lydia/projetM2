@@ -13,7 +13,7 @@ const Profil = () => {
 
     return (
         <div className="pt-24 pb-12 min-h-screen bg-amber-50/30">
-            <Header showCategories={false} setSearchTerm={setSearchTerm} />
+            <Header showCategories={false} setSearchTerm={setSearchTerm} showAdCarousel={false}/>
             
             <div className="container mx-auto px-4 mt-16">
                 <h1 className="text-2xl font-bold text-amber-800 mb-6 px-6">Mon Profil</h1>

@@ -56,6 +56,7 @@ const CartPage = () => {
       <div className="sticky top-0 mb-12 z-10 bg-white shadow-md">
         <Header 
           showCategories={false}
+          showAdCarousel={false}
           setSearchTerm={setSearchTerm}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}

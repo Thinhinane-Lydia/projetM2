@@ -304,31 +304,63 @@ router.delete("/delete-user/:userId", isAuthenticated, isAdmin, async (req, res,
 
 
 
-  router.put("/update-profile", isAuthenticated, async (req, res, next) => {
+  // Correction de la route update-profile dans le fichier user.js (backend)
+router.put("/update-profile", isAuthenticated, upload.single("avatar"), async (req, res, next) => {
     try {
-      const { name, phoneNumber, address, avatar } = req.body;
+      const { name, phoneNumber, address } = req.body;
       const user = await User.findById(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: "Utilisateur introuvable" });
+      
+      if (!user) return res.status(404).json({ 
+        success: false,
+        message: "Utilisateur introuvable" 
+      });
+      
+      let avatarUpdate = user.avatar;
+      
+      // Traiter l'avatar s'il est fourni
+      if (req.file) {
+        // Utiliser le fichier téléchargé
+        const filename = req.file.filename;
+        const fileUrl = `/uploads/${filename}`;
+        avatarUpdate = {
+          public_id: filename,
+          url: fileUrl
+        };
       }
   
-      // Ne pas permettre la modification de l'email
+      // Préparer l'adresse (si elle existe)
+      let addressUpdate = user.addresses;
+      if (address) {
+        // Si l'utilisateur n'a pas encore d'adresses, créer un tableau
+        if (!Array.isArray(addressUpdate) || addressUpdate.length === 0) {
+          addressUpdate = [{ address1: address }];
+        } else {
+          // Sinon mettre à jour la première adresse
+          addressUpdate[0] = { 
+            ...addressUpdate[0],
+            address1: address 
+          };
+        }
+      }
+  
+      // Mise à jour du profil
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
         { 
           name: name || user.name,
           phoneNumber: phoneNumber || user.phoneNumber,
-          address: addresses || user.addresses,
-          avatar: avatar || user.avatar, // Assurez-vous de gérer l'avatar de manière appropriée
+          addresses: addressUpdate,
+          avatar: avatarUpdate
         },
         { new: true }
       );
+      
       res.status(200).json({ success: true, user: updatedUser });
     } catch (error) {
+      console.error("❌ Erreur lors de la mise à jour du profil:", error);
       next(error);
     }
   });
-  
 
   
 

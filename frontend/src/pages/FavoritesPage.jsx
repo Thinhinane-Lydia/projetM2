@@ -9,6 +9,7 @@ const FavoritesPage = () => {
     <div className="pt-24 pb-12 min-h-screen bg-amber-50/30">
       <Header 
         showCategories={false}
+        showAdCarousel={false}
         setSearchTerm={setSearchTerm} 
       />
       

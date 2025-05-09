@@ -10,7 +10,7 @@ const MessagesPage = () => {
   
   return (
     <div className="flex flex-col min-h-screen mt-10 bg-gradient-to-br from-amber-50 to-white">
-      <Header showCategories={false} setSearchTerm={setSearchTerm} />
+      <Header showCategories={false} setSearchTerm={setSearchTerm} showAdCarousel={false}/>
       
       <main className="flex-grow container mx-auto px-4 pt-24 pb-16">
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">

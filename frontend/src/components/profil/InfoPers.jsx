@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useState } from "react";
 import { fetchUser, logout } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
@@ -50,6 +48,14 @@ const InfoPers = () => {
         }
     };
 
+    // Fonction utilitaire pour obtenir l'adresse
+    const getAddress = () => {
+        if (user.addresses && user.addresses.length > 0 && user.addresses[0].address1) {
+            return user.addresses[0].address1;
+        }
+        return 'Non renseignée';
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center p-8">
@@ -92,7 +98,7 @@ const InfoPers = () => {
                     {/* Boutons d'action */}
                     <div className="mt-6 md:mt-0 flex flex-col md:flex-row gap-3">
                         <button 
-                        
+                        onClick={() => navigate("/Edit")}
                         className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -134,7 +140,7 @@ const InfoPers = () => {
                             </div>
                             <div>
                                 <span className="text-gray-600 text-sm">Téléphone:</span>
-                                <p className="text-gray-800 font-medium">{user.phone || 'Non renseigné'}</p>
+                                <p className="text-gray-800 font-medium">{user.phoneNumber || 'Non renseigné'}</p>
                             </div>
                         </div>
                         
@@ -147,7 +153,7 @@ const InfoPers = () => {
                             </div>
                             <div>
                                 <span className="text-gray-600 text-sm">Adresse:</span>
-                                <p className="text-gray-800 font-medium">{user.address || 'Non renseignée'}</p>
+                                <p className="text-gray-800 font-medium">{getAddress()}</p>
                             </div>
                         </div>
                     </div>

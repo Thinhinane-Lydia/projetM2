@@ -1,9 +1,3 @@
-
-
-
-
-
-
 const Comment = require("../model/Comment");
 const catchAsyncError = require("../middleware/catchAsyncError");
 const ErrorHandler = require("../utils/ErrorHandler");

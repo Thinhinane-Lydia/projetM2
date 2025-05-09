@@ -219,7 +219,8 @@ const validateForm = () => {
   return (
     <div className="bg-amber-50 min-h-screen font-sans mb-10">
         {/* Add Header component */}
-        <Header showCategories={false} setSearchTerm={setSearchTerm} />
+        <Header showCategories={false} setSearchTerm={setSearchTerm} 
+        showAdCarousel={false}/>
  
 
       {/* En-tête avec étapes cliquables */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { searchUsers, fetchUser } from '../../utils/api';
+import { searchUsers, fetchUser, fetchConversations, fetchLastMessage } from '../../utils/api';
 import '../../App.css';
 
 const ConversationsList = () => {
@@ -39,131 +39,141 @@ const ConversationsList = () => {
     getUserInfo();
   }, []);
 
-  // Utilisation de useCallback pour optimiser les fonctions
-  const fetchConversations = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      
-      const response = await axios.get(`${API_BASE_URL}/conversations`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      });
-      
-      if (response.data.success) {
-        // Afficher les données pour le débogage
-        console.log("Conversations reçues:", response.data.data);
-        setConversations(response.data.data);
-      } else {
-        throw new Error(response.data.message || "Erreur lors de la récupération des conversations");
-      }
-    } catch (err) {
-      console.error("❌ Erreur lors de la récupération des conversations:", err);
-      setError(`Erreur: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [API_BASE_URL, navigate]);
-
-  // Effet pour charger les conversations
-  useEffect(() => {
-    fetchConversations();
-    
-    // Rafraîchir périodiquement les conversations
-    const interval = setInterval(fetchConversations, 30000); // 30 secondes
-    
-    return () => clearInterval(interval);
-  }, [fetchConversations]);
-
-  // // Fonction pour rechercher un utilisateur
-  // const handleSearchUser = useCallback(async () => {
-  //   if (!searchQuery.trim()) {
-  //     setSearchResults([]);
-  //     return;
-  //   }
-  
+  // Charger les conversations
+  // const loadConversations = useCallback(async () => {
   //   try {
-  //     setIsSearching(true);
-  //     const response = await searchUsers(searchQuery);
+  //     const token = localStorage.getItem('token');
+  //     if (!token) {
+  //       navigate('/login');
+  //       return;
+  //     }
+      
+  //     // Utiliser la fonction fetchConversations au lieu d'appeler axios directement
+  //     const response = await fetchConversations();
       
   //     if (response.success) {
-  //       // Filtrer l'utilisateur actuel des résultats
-  //       const filteredResults = response.data.filter(
-  //         user => user._id !== currentUserId
-  //       );
-  //       // Afficher les résultats pour le débogage
-  //       console.log("Résultats de recherche:", filteredResults);
-  //       setSearchResults(filteredResults);
+  //       // Afficher les données pour le débogage
+  //       console.log("Conversations reçues:", response.data);
+  //       setConversations(response.data);
   //     } else {
-  //       console.error("❌ Échec de la recherche:", response.message);
+  //       throw new Error(response.message || "Erreur lors de la récupération des conversations");
   //     }
-  //   } catch (error) {
-  //     console.error("❌ Erreur lors de la recherche :", error);
+  //   } catch (err) {
+  //     console.error("❌ Erreur lors de la récupération des conversations:", err);
+  //     setError(`Erreur: ${err.message}`);
   //   } finally {
-  //     setIsSearching(false);
+  //     setLoading(false);
   //   }
-  // }, [searchQuery, currentUserId]);
+  // }, [navigate]);
+// Mise à jour de la fonction loadConversations dans ConversationsList.jsx
+const loadConversations = useCallback(async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    
+    setLoading(true);
+    
+    // Utiliser la fonction fetchConversations mise à jour
+    const response = await fetchConversations();
+    
+    if (response.success) {
+      // Log pour débogage
+      console.log("Conversations avec derniers messages:", response.data);
+      
+      // Mettre à jour l'état avec les conversations complètes (y compris derniers messages)
+      setConversations(response.data);
+    } else {
+      throw new Error(response.message || "Erreur lors de la récupération des conversations");
+    }
+  } catch (err) {
+    console.error("❌ Erreur lors de la récupération des conversations:", err);
+    setError(`Erreur: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
+}, [navigate]);
+
+// Amélioration de la fonction getLastMessageContent pour gérer plus de cas
+const getLastMessageContent = useCallback((conversation) => {
+  if (!conversation) return "Pas encore de messages";
+  
+  // Vérification plus détaillée du dernier message
+  if (!conversation.lastMessage) return "Pas encore de messages";
+  
+  // Si lastMessage est un objet avec un contenu
+  if (typeof conversation.lastMessage === 'object' && conversation.lastMessage !== null) {
+    // Vérifier content en priorité
+    if (conversation.lastMessage.content) {
+      return conversation.lastMessage.content;
+    }
+    
+    // Si on a un texte
+    if (conversation.lastMessage.text) {
+      return conversation.lastMessage.text;
+    }
+  }
+  
+  // Si lastMessage est une chaîne de caractères (ID)
+  if (typeof conversation.lastMessage === 'string') {
+    return "Chargement du message...";
+  }
+  
+  return "Pas encore de messages";
+}, []);
+  // Effet pour charger les conversations
+  useEffect(() => {
+    loadConversations();
+    
+    // Rafraîchir périodiquement les conversations
+    const interval = setInterval(loadConversations, 30000); // 30 secondes
+    
+    return () => clearInterval(interval);
+  }, [loadConversations]);
 
   // Fonction de recherche d'utilisateurs
-const handleSearchUser = useCallback(async () => {
-  if (!searchQuery.trim()) {
-    setSearchResults([]);
-    return;
-  }
-
-  try {
-    setIsSearching(true);
-    const response = await searchUsers(searchQuery);  // Appel à la fonction searchUsers
-
-    if (response.success) {
-      // Filtrer les résultats pour exclure l'utilisateur actuel
-      const filteredResults = response.data.filter(
-        (user) => user._id !== currentUserId
-      );
-      setSearchResults(filteredResults);  // Mettre à jour les résultats
-    } else {
-      console.error("❌ Échec de la recherche:", response.message);
+  const handleSearchUser = useCallback(async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
     }
-  } catch (error) {
-    console.error("❌ Erreur lors de la recherche:", error);
-  } finally {
-    setIsSearching(false);
-  }
-}, [searchQuery, currentUserId]);
 
-// Effet pour gérer la recherche avec un délai (debounce)
-useEffect(() => {
-  const timeoutId = setTimeout(() => {
-    if (searchQuery.trim()) {
-      handleSearchUser();  // Déclencher la recherche
-    } else {
-      setSearchResults([]);  // Réinitialiser les résultats si la recherche est vide
+    try {
+      setIsSearching(true);
+      const response = await searchUsers(searchQuery);
+
+      if (response.success) {
+        // Filtrer les résultats pour exclure l'utilisateur actuel
+        const filteredResults = response.data.filter(
+          (user) => user._id !== currentUserId
+        );
+        setSearchResults(filteredResults);
+      } else {
+        console.error("❌ Échec de la recherche:", response.message);
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors de la recherche:", error);
+    } finally {
+      setIsSearching(false);
     }
-  }, 300);  // Délai de 300ms pour une recherche réactive
+  }, [searchQuery, currentUserId]);
 
-  return () => clearTimeout(timeoutId);  // Nettoyage de l'effet
-}, [searchQuery, handleSearchUser]);
+  // Effet pour gérer la recherche avec un délai (debounce)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        handleSearchUser();
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
 
-
-  // // Effet pour la recherche avec délai (debounce)
-  // useEffect(() => {
-  //   const timeoutId = setTimeout(() => {
-  //     if (searchQuery.trim()) {
-  //       handleSearchUser();
-  //     } else {
-  //       setSearchResults([]);
-  //     }
-  //   }, 300); // 300ms de délai pour une réactivité améliorée
-    
-  //   return () => clearTimeout(timeoutId);
-  // }, [searchQuery, handleSearchUser]);
-
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, handleSearchUser]);
 
   // Fonction améliorée pour obtenir le nom d'affichage
-
   const getDisplayName = useCallback((participant) => {
     // Afficher les données de participant pour le débogage
     console.log("Données participant:", participant);
@@ -171,7 +181,6 @@ useEffect(() => {
     if (!participant) return "Utilisateur inconnu";
     
     // Vérification des différentes possibilités de nom
-    // 1. Priorité au champ 'name' direct
     if (participant.name && typeof participant.name === 'string') {
       return participant.name;
     }
@@ -180,70 +189,49 @@ useEffect(() => {
       return participant.user.name;
     }
     
-    
-    // 2. Vérifier si le nom est dans un sous-objet 'user'
-    if (participant.user && participant.user.name) {
-      return participant.user.name;
-    }
-    
-    // 3. Utiliser username comme fallback
     if (participant.username) {
       return participant.username;
     }
     
-    // 4. Vérifier si username est dans un sous-objet 'user'
     if (participant.user && participant.user.username) {
       return participant.user.username;
     }
     
-    // 5. Utiliser prénom et nom si disponibles
     if (participant.firstName && participant.lastName) {
       return `${participant.firstName} ${participant.lastName}`;
     }
     
-    // 6. Vérifier si prénom et nom sont dans un sous-objet 'user'
     if (participant.user && participant.user.firstName && participant.user.lastName) {
       return `${participant.user.firstName} ${participant.user.lastName}`;
     }
     
-    // 7. Juste le prénom si disponible
     if (participant.firstName) {
       return participant.firstName;
     }
     
-    // 8. Prénom depuis sous-objet 'user'
     if (participant.user && participant.user.firstName) {
       return participant.user.firstName;
     }
     
-    // 9. Utiliser l'email comme dernier recours sans le domaine
     if (participant.email) {
       return participant.email.split('@')[0];
     }
     
-    // 10. Email depuis sous-objet 'user'
     if (participant.user && participant.user.email) {
       return participant.user.email.split('@')[0];
     }
     
-    // Si aucune information n'est disponible, utiliser l'ID pour éviter "Utilisateur anonyme"
     if (participant._id) {
       return `Utilisateur #${participant._id.substring(0, 5)}`;
     }
     
-    // Si un nom est disponible, utilise-le
-    if (participant.name) return participant.name;
-  
-    // Sinon, affiche "Utilisateur" par défaut
     return "Utilisateur";
   }, []);
   
-
   // Fonction améliorée pour obtenir l'avatar URL avec gestion des erreurs
   const getAvatarUrl = useCallback((participant) => {
     if (!participant) return '/default-avatar.png';
     
-    // 1. Vérifier si avatar est un objet avec URL
     if (participant.avatar && participant.avatar.url) {
       const avatarUrl = participant.avatar.url;
       if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
@@ -252,7 +240,6 @@ useEffect(() => {
       return `${IMAGE_BASE_URL}${avatarUrl}`;
     } 
     
-    // 2. Vérifier si avatar est dans un sous-objet 'user'
     if (participant.user && participant.user.avatar) {
       if (participant.user.avatar.url) {
         const avatarUrl = participant.user.avatar.url;
@@ -269,7 +256,6 @@ useEffect(() => {
       }
     }
     
-    // 3. Vérifier si avatar est une chaîne directe
     if (participant.avatar && typeof participant.avatar === 'string') {
       const avatarUrl = participant.avatar;
       if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
@@ -278,19 +264,15 @@ useEffect(() => {
       return `${IMAGE_BASE_URL}/${avatarUrl}`;
     }
     
-    // 4. Si aucun avatar n'est trouvé, utiliser l'avatar par défaut
     return '/default-avatar.png';
   }, [IMAGE_BASE_URL]);
 
-  // Fonction pour obtenir l'autre participant avec meilleure gestion
+  // Fonction pour obtenir l'autre participant
   const getOtherParticipant = useCallback((conversation) => {
     if (!conversation) return null;
     
-    // Vérifier si nous avons participants comme tableau
     if (Array.isArray(conversation.participants)) {
-      // Chercher un participant qui n'est pas l'utilisateur courant
       const otherParticipant = conversation.participants.find(p => {
-        // Vérifier si l'identifiant est directement sur l'objet ou dans un sous-objet 'user'
         const participantId = p._id || (p.user && p.user._id);
         return participantId !== currentUserId;
       });
@@ -298,54 +280,18 @@ useEffect(() => {
       return otherParticipant || null;
     }
     
-    // Si les participants sont stockés dans un autre format
-    // Par exemple, directement comme un objet 'otherUser'
     if (conversation.otherUser) {
       return conversation.otherUser;
     }
     
-    // Si nous avons un format où les utilisateurs sont dans 'users' plutôt que 'participants'
     if (Array.isArray(conversation.users)) {
       return conversation.users.find(u => u._id !== currentUserId) || null;
     }
     
-    // Si aucun participant n'est trouvé
     return null;
   }, [currentUserId]);
 
   // Fonction pour démarrer une conversation
-  // const startConversation = async (userId) => {
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     if (!token) {
-  //       navigate('/login');
-  //       return;
-  //     }
-      
-  //     setLoading(true);
-  //     const response = await axios.post(
-  //       `${API_BASE_URL}/conversations/start`,
-  //       { userId },
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //         withCredentials: true,
-  //       }
-  //     );
-  
-  //     if (response.data.success) {
-  //       setSearchQuery('');
-  //       setSearchResults([]);
-  //       navigate(`/messages/${response.data.conversationId}`);
-  //     } else {
-  //       throw new Error(response.data.message || "Erreur lors de la création de la conversation");
-  //     }
-  //   } catch (error) {
-  //     console.error("❌ Erreur lors du démarrage de la conversation:", error);
-  //     setError(`Erreur: ${error.message}`);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const startConversation = async (userId) => {
     try {
       const token = localStorage.getItem("token");
@@ -357,20 +303,19 @@ useEffect(() => {
       setLoading(true);
       const response = await axios.post(
         `${API_BASE_URL}/conversations/start`,
-        { receiverId: userId },  // Assurez-vous que l'ID du destinataire est bien passé
+        { userId: userId },
         {
           headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         }
       );
   
-      // Vérification de la réponse de l'API
       console.log("Réponse de l'API pour démarrer la conversation:", response.data);
   
       if (response.data.success) {
-        setSearchQuery('');  // Réinitialiser la recherche
-        setSearchResults([]);  // Réinitialiser les résultats
-        navigate(`/messages/${response.data.conversationId}`);  // Rediriger vers la nouvelle conversation
+        setSearchQuery('');
+        setSearchResults([]);
+        navigate(`/messages/${response.data.conversationId}`);
       } else {
         throw new Error(response.data.message || "Erreur lors de la création de la conversation");
       }
@@ -382,8 +327,6 @@ useEffect(() => {
     }
   };
   
-
-  
   // Formatter la date du dernier message
   const formatLastMessageTime = (dateString) => {
     if (!dateString) return '';
@@ -394,35 +337,97 @@ useEffect(() => {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    // Si c'est aujourd'hui, afficher seulement l'heure
     if (messageDate >= today) {
       return messageDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     } 
-    // Si c'est hier, afficher "Hier"
     else if (messageDate >= yesterday) {
       return 'Hier';
     } 
-    // Sinon afficher la date
     else {
       return messageDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     }
   };
 
-  // Ajouter ce debug pour identifier les problèmes de noms d'utilisateurs
+  // Fonction améliorée pour obtenir le contenu du dernier message
+  // const getLastMessageContent = useCallback((conversation) => {
+  //   if (!conversation) return "Pas encore de messages";
+    
+  //   if (!conversation.lastMessage) return "Pas encore de messages";
+    
+  //   if (typeof conversation.lastMessage === 'object' && conversation.lastMessage.content) {
+  //     return conversation.lastMessage.content;
+  //   }
+    
+  //   return "Chargement du message...";
+  // }, []);
+
+  // Charger les derniers messages manquants
+  useEffect(() => {
+    const loadMissingLastMessages = async () => {
+      // Identifier les conversations nécessitant le chargement de leur dernier message
+      const conversationsNeedingMessages = conversations.filter(conv => 
+        conv.lastMessage && (
+          typeof conv.lastMessage === 'string' || 
+          (typeof conv.lastMessage === 'object' && conv.lastMessage._id && !conv.lastMessage.content)
+        )
+      );
+      
+      // Journalisation pour le débogage
+      if (conversationsNeedingMessages.length > 0) {
+        console.log(`Chargement des derniers messages pour ${conversationsNeedingMessages.length} conversations`);
+      }
+      
+      // Traiter chaque conversation séquentiellement pour éviter les problèmes de race condition
+      for (const conv of conversationsNeedingMessages) {
+        try {
+          console.log(`Tentative de chargement du dernier message pour la conversation ${conv._id}`);
+          
+          const response = await fetchLastMessage(conv._id);
+          
+          console.log(`Réponse du serveur pour le dernier message:`, response);
+          
+          if (response && response.success && response.data) {
+            // Mettre à jour la conversation dans l'état local
+            setConversations(prevConvs => 
+              prevConvs.map(prevConv => 
+                prevConv._id === conv._id 
+                  ? {...prevConv, lastMessage: response.data} 
+                  : prevConv
+              )
+            );
+            console.log(`Message chargé avec succès pour la conversation ${conv._id}`);
+          } else {
+            console.warn(`Aucune donnée de message reçue pour la conversation ${conv._id}`);
+          }
+        } catch (error) {
+          console.error(`Erreur lors du chargement du message pour la conversation ${conv._id}:`, error);
+        }
+      }
+    };
+    
+    if (conversations.length > 0) {
+      loadMissingLastMessages();
+    }
+  }, [conversations]);
+
+  // Pour le débogage - analyser les données des conversations
   useEffect(() => {
     if (conversations.length > 0) {
-      console.log("Données pour debug des noms d'utilisateurs:", conversations.map(conv => ({
-        id: conv._id,
-        otherParticipant: getOtherParticipant(conv),
-        displayName: getOtherParticipant(conv) ? getDisplayName(getOtherParticipant(conv)) : 'Non trouvé'
-      })));
+      console.log("Données des conversations (pour débogage):", 
+        conversations.map(conv => ({
+          id: conv._id,
+          lastMessage: conv.lastMessage,
+          otherParticipant: getOtherParticipant(conv),
+          displayName: getOtherParticipant(conv) ? getDisplayName(getOtherParticipant(conv)) : 'Non trouvé'
+        }))
+      );
     }
   }, [conversations, getOtherParticipant, getDisplayName]);
 
   return (
     <div className="max-w-4xl mx-auto bg-amber-50 min-h-screen shadow-lg">
       <div className="p-4 md:p-6">
-        {/* En-tête avec le profil utilisateur - Seulement nom affiché */}
+        {/* En-tête avec le profil utilisateur */}
         <div className="flex items-center justify-between mb-6 border-b border-amber-200 pb-4">
           <h1 className="text-2xl font-bold text-amber-800">Messagerie</h1>
           
@@ -432,7 +437,6 @@ useEffect(() => {
             <div className="flex items-center">
               <div className="mr-3 text-right hidden sm:block">
                 <p className="font-medium text-amber-800">{getDisplayName(user)}</p>
-                {/* L'email a été supprimé ici selon votre demande */}
               </div>
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-300">
                 <img 
@@ -450,6 +454,7 @@ useEffect(() => {
           )}
         </div>
         
+        {/* Barre de recherche */}
         <div className="relative mb-6">
           <input
             type="text"
@@ -470,6 +475,7 @@ useEffect(() => {
           </div>
         </div>
 
+        {/* Résultats de recherche */}
         {searchResults.length > 0 && (
           <div className="bg-white rounded-lg shadow-md mb-6 p-2 border border-amber-200">
             <h3 className="text-amber-800 font-medium px-3 py-2 border-b border-amber-200">Résultats de recherche</h3>
@@ -499,6 +505,7 @@ useEffect(() => {
           </div>
         )}
 
+        {/* Liste des conversations */}
         <div className="conversations-list">
           <h2 className="text-xl font-semibold text-amber-800 mb-4 pb-2 border-b border-amber-200">Mes conversations</h2>
           
@@ -517,12 +524,21 @@ useEffect(() => {
                 const otherParticipant = getOtherParticipant(conversation);
                 if (!otherParticipant) return null;
                 
-                const lastMessage = conversation.lastMessage?.content || "";
+                const lastMessageContent = getLastMessageContent(conversation);
                 const lastMessageDate = conversation.lastMessage?.createdAt || null;
-                const isUnread = conversation.lastMessage?.sender !== currentUserId && 
-                                !conversation.lastMessage?.read;
                 
-                // Utiliser getDisplayName pour afficher le nom correct
+                const isUnread = conversation.lastMessage && 
+                                conversation.lastMessage.senderId && 
+                                conversation.lastMessage.senderId !== currentUserId && 
+                                !conversation.lastMessage.read;
+                
+                const lastMessageSenderId = conversation.lastMessage?.senderId;
+                
+                let messagePrefix = '';
+                if (lastMessageSenderId) {
+                  messagePrefix = lastMessageSenderId === currentUserId ? 'Vous : ' : '';
+                }
+                
                 const participantName = getDisplayName(otherParticipant);
                 
                 return (
@@ -558,34 +574,34 @@ useEffect(() => {
                         )}
                       </div>
                       
-                      {lastMessage && (
-                        <div className="flex items-center justify-between">
-                          <p className={`text-sm truncate ${isUnread ? 'text-amber-900 font-medium' : 'text-amber-700'}`}>
-                            {lastMessage.length > 40 ? `${lastMessage.substring(0, 40)}...` : lastMessage}
-                          </p>
-                          {isUnread && (
-                            <span className="h-2 w-2 bg-amber-600 rounded-full flex-shrink-0 ml-2"></span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="bg-amber-100 p-8 rounded-lg text-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-amber-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <p className="text-amber-800 font-medium mb-2">Vous n'avez pas encore de conversations</p>
-              <p className="text-amber-600">Utilisez la recherche pour trouver des utilisateurs</p>
-            </div>
-          )}
-        </div>
+                      <div className="flex items-center justify-between">
+                        <p className={`text-sm truncate ${isUnread ? 'text-amber-900 font-medium' : 'text-amber-700'}`}>
+                          {messagePrefix}{lastMessageContent.length > 40 ? `${lastMessageContent.substring(0, 40)}...` : lastMessageContent}
+                        </p>
+                        {isUnread && (
+                          <span className="h-2 w-2 bg-amber-600 rounded-full flex-shrink-0 ml-2"></span>
+                    )}
+                  </div>
+                  </div>
+                </Link>
+                
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-amber-100 p-8 rounded-lg text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-amber-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p className="text-amber-800 font-medium mb-2">Vous n'avez pas encore de conversations</p>
+            <p className="text-amber-600">Utilisez la recherche pour trouver des utilisateurs</p>
+          </div>
+        )}
       </div>
+    
     </div>
-  );
+  </div>
+);
 };
 
 export default ConversationsList;

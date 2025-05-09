@@ -15,6 +15,7 @@ const HistoriquePage = () => {
     <div>
       <Header 
         showCategories={false} 
+        showAdCarousel={false}
         setSearchTerm={setSearchTerm}
         setActiveCategory={setActiveCategory}
         activeCategory={activeCategory}

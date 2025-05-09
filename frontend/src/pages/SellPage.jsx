@@ -9,8 +9,8 @@ const SellPage = () => {
     return (
         <div className="pt-32">
             {/* ✅ On passe bien setSearchTerm pour éviter l'erreur */}
-            <Header showCategories={false} setSearchTerm={setSearchTerm} />
-
+            <Header showCategories={false} setSearchTerm={setSearchTerm} showAdCarousel={false} />
+             
             <div className="flex justify-center items-center mt-10 mb-8">
                 <SellForm onSubmit={(data) => console.log("Données soumises :", data)} />
             </div>

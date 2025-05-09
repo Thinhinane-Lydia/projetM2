@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const Message = require('../model/Message');
 const Conversation = require('../model/Conversation');
-const user = require('../model/user');
+const User = require('../model/user'); // Correction: 'user' en 'User' avec majuscule
+
 /**
  * Valide un ID MongoDB
  * @param {string} id - ID à valider
@@ -45,6 +46,11 @@ exports.getConversationMessages = async (req, res) => {
         message: "Accès non autorisé à cette conversation" 
       });
     }
+
+    // Récupérer les utilisateurs bloqués par l'utilisateur actuel
+    const currentUser = await User.findById(userId);
+    // Important: On ne filtre PAS les messages des utilisateurs bloqués ici
+    // On récupère tous les messages visibles pour l'utilisateur
 
     // Récupérer les messages
     const messages = await Message.find({ 
@@ -91,11 +97,24 @@ exports.sendMessage = async (req, res) => {
   try {
     const { conversationId, text, recipientId } = req.body;
     const senderId = req.user._id;
-      // Vérifier si le destinataire est bloqué
-  const sender = await User.findById(senderId);
-  if (sender.blockedUsers.includes(recipientId)) {
-    return res.status(403).json({ success: false, message: 'Vous avez bloqué cet utilisateur' });
-  }
+    
+    // Vérifier si le destinataire est bloqué
+    const sender = await User.findById(senderId);
+    if (sender.blockedUsers.includes(recipientId)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Vous avez bloqué cet utilisateur' 
+      });
+    }
+    
+    // Vérifier si l'expéditeur est bloqué par le destinataire
+    const recipient = await User.findById(recipientId);
+    if (recipient.blockedUsers.includes(senderId)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Cet utilisateur vous a bloqué' 
+      });
+    }
     
     // Validations
     if (!text || text.trim() === '') {
@@ -345,8 +364,6 @@ exports.markMessageAsRead = async (req, res) => {
     });
   }
 };
-
-
 
 exports.deleteConversation = async (req, res) => {
   try {

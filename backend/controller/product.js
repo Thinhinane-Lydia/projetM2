@@ -1,50 +1,11 @@
 
 const Product = require("../model/Product");
+const { countFavoritesByProduct } = require('../model/Favorite');
+
 const ErrorHandler = require("../utils/ErrorHandler");
 const catchAsyncError = require("../middleware/catchAsyncError");
 // const { sendNotification } = require("../utils/notificationService");
 
-
-
-// exports.createProduct = catchAsyncError(async (req, res, next) => {
-//   if (!req.user || !req.user.id) {
-//     return next(new ErrorHandler("Vous devez être connecté pour ajouter un produit", 401));
-//   }
-
-//   const { name, description, category, subCategory, price, brand, material, size, condition, color } = req.body;
-
-//   if (!req.files || req.files.length === 0) {
-//     return next(new ErrorHandler("Au moins une image est requise", 400));
-//   }
-
-//   // ✅ Correction ici : Remplacement des `\` par `/`
-//   const images = req.files.map(file => ({ url: file.path.replace(/\\/g, "/") }));
-
-//   // ✅ Création d'un objet `productData` sans `size` par défaut
-//   const productData = {
-//     name,
-//     description,
-//     category,
-//     subCategory,
-//     price,
-//     brand,
-//     material,
-//     condition,
-//     color,
-//     images,
-//     seller: req.user.id,
-//   };
-
-//   // ✅ Ajout de `size` seulement s'il est défini et valide
-//   if (size) {
-//     productData.size = size;
-//   }
-
-//   // ✅ Enregistrement du produit dans MongoDB
-//   const product = await Product.create(productData);
-
-//   res.status(201).json({ success: true, product });
-// });
 exports.createProduct = catchAsyncError(async (req, res, next) => {
   if (!req.user || !req.user.id) {
     return next(new ErrorHandler("Vous devez être connecté pour ajouter un produit", 401));

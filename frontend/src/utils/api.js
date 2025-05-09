@@ -256,39 +256,36 @@ export const logout = async () => {
     );
   }
 };
-
 /**
- * ✅ Mettre à jour le profil utilisateur
+ * ✅ Mettre à jour le profil de l'utilisateur connecté (hors email)
+ * @param {FormData} profileData - Données du profil à mettre à jour
+ * @returns {Promise<Object>} - Résultat de l'API
  */
 export const updateUserProfile = async (profileData) => {
   try {
-    // Vérifier que profileData est bien un FormData
     if (!(profileData instanceof FormData)) {
       console.error("❌ updateUserProfile: profileData n'est pas un FormData");
       return { success: false, message: "Format de données incorrect" };
     }
-
-    // Debug: Afficher le contenu du FormData
-    console.log("Contenu du FormData pour mise à jour du profil:");
-    for (let [key, value] of profileData.entries()) {
-      console.log(`${key}: ${value instanceof File ? value.name : value}`);
-    }
-
+    
+    console.log("🔄 Mise à jour du profil avec :", Object.fromEntries(profileData.entries()));
+    
     const response = await api.put("/user/update-profile", profileData, {
-      headers: { 
-        "Content-Type": "multipart/form-data" // Crucial pour l'envoi de fichiers
+      headers: {
+        "Content-Type": "multipart/form-data"
       }
     });
-
+    
     return response.data;
   } catch (error) {
     return handleApiError(
       error,
-      { success: false, message: error.response?.data?.message || "Erreur lors de la mise à jour du profil" },
+      { success: false, message: "Erreur lors de la mise à jour du profil" },
       "❌ Erreur updateUserProfile"
     );
   }
 };
+
 
 
 // COMMENTAIRES
@@ -672,10 +669,31 @@ export const updateCartItem = async (cartItemId, quantity) => {
 /**
  * ✅ Récupérer les conversations
  */
+// export const fetchConversations = async () => {
+//   try {
+//     const response = await api.get("/api/v2/conversations");
+//     return response.data;
+//   } catch (error) {
+//     return handleApiError(
+//       error, 
+//       { success: false, data: [] }, 
+//       "Erreur lors de la récupération des conversations"
+//     );
+//   }
+// };
+// Récupérer les conversations de l'utilisateur
 export const fetchConversations = async () => {
   try {
-    const response = await api.get("/api/v2/conversations");
-    return response.data;
+    const response = await api.get("/conversations");
+    
+    // Vérifier que le champ data contient les conversations
+    if (response.data && response.data.success) {
+      console.log("Données conversations reçues:", response.data.data);
+      return response.data;
+    } else {
+      console.error("Format de réponse inattendu:", response.data);
+      return { success: false, data: [] };
+    }
   } catch (error) {
     return handleApiError(
       error, 
@@ -684,7 +702,6 @@ export const fetchConversations = async () => {
     );
   }
 };
-
 /**
  * ✅ Récupérer une conversation par ID
  */
@@ -1111,6 +1128,48 @@ export const updateOrderStatus = async (orderId, status) => {
     console.log("Réponse de la mise à jour de statut:", response.data);
   } catch (error) {
     console.error("Erreur lors de la mise à jour du statut de la commande:", error);
+  }
+};
+
+/**
+ * ✅ Récupérer les recommandations d'un utilisateur
+ * @param {string} userId - L'ID de l'utilisateur pour récupérer ses recommandations
+ */
+export const fetchUserRecommendations = async (userId) => {
+  try {
+    const response = await api.get(`/recommendations/user/${userId}`);
+    return response.data; // Retourne les données des recommandations
+  } catch (error) {
+    return handleApiError(error, { success: false, message: "Erreur lors de la récupération des recommandations" }, "❌ Erreur fetchUserRecommendations");
+  }
+};
+export const fetchProductFavoriteCount = async (productId) => {
+  try {
+    const response = await api.get(`/favorites/count/${productId}`);
+    return response.data.favoriteCount;
+  } catch (error) {
+    console.error("Erreur lors de la récupération du nombre de favoris", error);
+    return 0;
+  }
+};
+
+// Ajoutez cette fonction dans votre fichier api.js
+
+/**
+ * Récupère le dernier message d'une conversation
+ * @param {string} conversationId - ID de la conversation
+ * @returns {Promise} - Objet contenant le dernier message
+ */
+export const fetchLastMessage = async (conversationId) => {
+  try {
+    const response = await api.get(`/conversations/${conversationId}/last-message`);
+    return response.data;
+  } catch (error) {
+    return handleApiError(
+      error, 
+      { success: false, data: null }, 
+      `Erreur lors de la récupération du dernier message pour la conversation ${conversationId}`
+    );
   }
 };
 

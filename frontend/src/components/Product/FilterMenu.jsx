@@ -21,9 +21,9 @@ const FilterMenu = ({ activeCategory, activeSubCategory, applyFilters }) => {
   const [sizes, setSizes] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
 
-  const brands = ["Zara", "Nike", "Adidas","H&M","Chanel","Gucci","Shein","Puma","New Balance","Levis","PULL&BEAR","stradivarius","Bershka","Primark","autre"];
-  const materials = ["Coton","Lin","Laine","Soie","Polyester","Nylon","Cuir","Satin","Acier inoxydable","Jean","Autre"];
-  const colors = ["blanc","noir","rouge","bleu","rose","marron","beige","vert","jaune","orange","violet","gris","melange de couleurs","autre"];
+  const brands = [" Dr. Martens","Zara", "Nike", "Adidas","H&M","Chanel","Gucci","Shein","Puma","New Balance","Levis","PULL&BEAR","stradivarius","Bershka","Primark","autre"];
+  const materials = ["Daim","Velours","Foulard","viscose","Coton","Lin","Laine","Soie","Polyester","Nylon","Denim","Cuir","Satin","Acier inoxydable","Argent","Plaqué Or","Jean","Autre"];
+  const colors = ["argent","Or","blanc","noir","rouge","bleu","rose","marron","beige","vert","jaune","orange","violet","gris","melange de couleurs","autre"];
   const conditions = ["Neuf", "Bon état", "Usé"];
   const ratingOptions = ["0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];
 

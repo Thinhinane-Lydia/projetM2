@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 const Conversation = require('../model/Conversation');
 const Message = require('../model/Message');
@@ -11,33 +10,32 @@ const User = require('../model/user');
  */
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-/**
- * Récupère toutes les conversations d'un utilisateur
- * @route GET /api/v2/conversations
- */
+
 exports.getUserConversations = async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     if (!isValidObjectId(userId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "ID utilisateur invalide" 
+      return res.status(400).json({
+        success: false,
+        message: "ID utilisateur invalide"
       });
     }
 
     const userIdObj = new mongoose.Types.ObjectId(userId);
 
+    // Récupérer toutes les conversations de l'utilisateur
     const conversations = await Conversation.find({
       participants: userIdObj
     })
-    .populate('participants', 'name username firstName lastName avatar email')
+    .populate('participants', 'name username firstName lastName avatar email isOnline')
     .populate({
       path: 'lastMessage',
-      select: 'content createdAt sender'
+      select: 'content senderId receiverId createdAt read' // Populer les détails du dernier message
+      // Note : `lastMessage` est une référence vers le modèle `Message`
     })
-    .sort({ updatedAt: -1 });
-    
+    .sort({ updatedAt: -1 });  // Tri par date de mise à jour de la conversation
+
     return res.status(200).json({
       success: true,
       data: conversations
@@ -51,76 +49,6 @@ exports.getUserConversations = async (req, res) => {
   }
 };
 
-/**
- * Démarre une nouvelle conversation ou récupère une existante
- * @route POST /api/v2/conversations/start
- */
-
-
-//     const { userId } = req.body;
-//     const currentUserId = req.user._id;
-
-//     if (!userId) {
-//         return res.status(400).json({ 
-//           success: false, 
-//           message: "ID utilisateur requis" 
-//         });
-//     }
-
-//     try {
-//         if (!isValidObjectId(userId)) {
-//             return res.status(400).json({ 
-//               success: false, 
-//               message: "ID utilisateur invalide" 
-//             });
-//         }
-
-//         // Vérifier si l'utilisateur n'essaie pas de démarrer une conversation avec lui-même
-//         if (userId.toString() === currentUserId.toString()) {
-//             return res.status(400).json({ 
-//                 success: false, 
-//                 message: "Impossible de démarrer une conversation avec soi-même" 
-//             });
-//         }
-
-//         const targetUserId = new mongoose.Types.ObjectId(userId);
-
-//         // Vérifier si l'utilisateur existe
-//         const targetUser = await User.findById(targetUserId);
-//         if (!targetUser) {
-//             return res.status(404).json({ 
-//                 success: false, 
-//                 message: "Utilisateur introuvable" 
-//             });
-//         }
-
-//         // Vérifier si la conversation existe déjà
-//         let conversation = await Conversation.findOne({ 
-//             participants: { 
-//                 $all: [currentUserId, targetUserId],
-//                 $size: 2  // Assure qu'il n'y a que 2 participants
-//             } 
-//         });
-
-//         if (!conversation) {
-//             conversation = new Conversation({ 
-//               participants: [currentUserId, targetUserId] 
-//             });
-//             await conversation.save();
-//         }
-
-//         return res.status(200).json({ 
-//           success: true, 
-//           conversationId: conversation._id 
-//         });
-//     } catch (error) {
-//         console.error("❌ Erreur lors du démarrage de la conversation:", error);
-//         return res.status(500).json({ 
-//           success: false, 
-//           message: "Erreur serveur" 
-//         });
-//     }
-// };
 
 exports.startConversation = async (req, res) => {
   const { userId } = req.body;
@@ -287,3 +215,177 @@ exports.sendMessage = async (req, res) => {
   res.status(200).json({ success: true, message: 'Message envoyé avec succès' });
 };
 
+/**
+ * Récupère le dernier message d'une conversation
+ * @route GET /api/v2/conversations/:id/last-message
+ */
+
+// exports.getLastMessage = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const userId = req.user._id;
+
+//     if (!isValidObjectId(id)) {
+//       return res.status(400).json({ 
+//         success: false, 
+//         message: "ID de conversation invalide" 
+//       });
+//     }
+
+//     // Vérifier si la conversation existe
+//     const conversation = await Conversation.findById(id);
+//     if (!conversation) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Conversation non trouvée'
+//       });
+//     }
+
+//     // Vérifier si l'utilisateur fait partie de la conversation
+//     if (!conversation.participants.some(p => p.toString() === userId.toString())) {
+//       return res.status(403).json({
+//         success: false,
+//         message: 'Accès non autorisé à cette conversation'
+//       });
+//     }
+
+//     // Si la conversation a déjà un lastMessage référencé
+//     if (conversation.lastMessage) {
+//       const lastMessage = await Message.findById(conversation.lastMessage)
+//         .populate('senderId', 'name username firstName lastName avatar')
+//         .populate('receiverId', 'name username firstName lastName avatar');
+
+//       if (lastMessage) {
+//         return res.status(200).json({
+//           success: true,
+//           data: lastMessage
+//         });
+//       }
+//     }
+
+//     // Si aucun dernier message n'est référencé ou s'il n'existe plus,
+//     // on récupère le message le plus récent de la conversation
+//     const latestMessage = await Message.findOne({ conversation: id })
+//       .sort({ createdAt: -1 })
+//       .populate('senderId', 'name username firstName lastName avatar')
+//       .populate('receiverId', 'name username firstName lastName avatar');
+
+//     if (!latestMessage) {
+//       return res.status(200).json({
+//         success: true,
+//         data: null  // Aucun message dans la conversation
+//       });
+//     }
+
+//     // Mettre à jour la référence au dernier message
+//     await Conversation.findByIdAndUpdate(id, {
+//       lastMessage: latestMessage._id
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       data: latestMessage
+//     });
+//   } catch (error) {
+//     console.error("❌ Erreur lors de la récupération du dernier message:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: 'Erreur serveur'
+//     });
+//   }
+// };
+// Amélioration de la fonction getLastMessage dans conversationController.js
+
+exports.getLastMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    console.log(`Récupération du dernier message pour la conversation ${id}`);
+
+    if (!isValidObjectId(id)) {
+      console.error("ID de conversation invalide:", id);
+      return res.status(400).json({
+        success: false,
+        message: "ID de conversation invalide"
+      });
+    }
+
+    // Vérifier si la conversation existe
+    const conversation = await Conversation.findById(id);
+    if (!conversation) {
+      console.error("Conversation non trouvée:", id);
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation non trouvée'
+      });
+    }
+
+    // Vérifier si l'utilisateur fait partie de la conversation
+    if (!conversation.participants.some(p => p.toString() === userId.toString())) {
+      console.error(`Utilisateur ${userId} non autorisé pour la conversation ${id}`);
+      return res.status(403).json({
+        success: false,
+        message: 'Accès non autorisé à cette conversation'
+      });
+    }
+
+    console.log(`Conversation ${id} trouvée, lastMessage:`, conversation.lastMessage);
+
+    // Si la conversation a déjà un lastMessage référencé
+    if (conversation.lastMessage) {
+      try {
+        const lastMessage = await Message.findById(conversation.lastMessage)
+          .populate('senderId', 'name username firstName lastName avatar')
+          .populate('receiverId', 'name username firstName lastName avatar');
+
+        if (lastMessage) {
+          console.log(`Dernier message trouvé:`, lastMessage);
+          return res.status(200).json({
+            success: true,
+            data: lastMessage
+          });
+        } else {
+          console.log(`Message référencé non trouvé:`, conversation.lastMessage);
+        }
+      } catch (msgError) {
+        console.error(`Erreur lors de la récupération du message ${conversation.lastMessage}:`, msgError);
+      }
+    }
+
+    console.log(`Recherche du dernier message de la conversation ${id}`);
+
+    // Si aucun dernier message n'est référencé ou s'il n'existe plus,
+    // on récupère le message le plus récent de la conversation
+    const latestMessage = await Message.findOne({ conversation: id })
+      .sort({ createdAt: -1 })
+      .populate('senderId', 'name username firstName lastName avatar')
+      .populate('receiverId', 'name username firstName lastName avatar');
+
+    if (!latestMessage) {
+      console.log(`Aucun message trouvé pour la conversation ${id}`);
+      return res.status(200).json({
+        success: true,
+        data: { content: "Pas encore de messages" }
+      });
+    }
+
+    console.log(`Dernier message trouvé par requête:`, latestMessage);
+
+    // Mettre à jour la référence au dernier message
+    await Conversation.findByIdAndUpdate(id, {
+      lastMessage: latestMessage._id
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: latestMessage
+    });
+  } catch (error) {
+    console.error("❌ Erreur lors de la récupération du dernier message:", error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur serveur'
+    });
+  }
+};

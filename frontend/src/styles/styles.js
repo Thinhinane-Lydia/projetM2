@@ -1,18 +1,3 @@
-const styles = {
-  custom_container: "w-11/12 hidden sm:block",
-  heading: 'text-[27px] text-center md:text-start font-[600] font-Roboto pb-[20px] text-gray-800',
-  section:'w-11/12 mx-auto',
-  productTitle: 'text-[25px] font-[600] font-Roboto text-[#333]',
-  productDiscountPrice:"font-bold text-[18px] text-[#333] font-Roboto",
-  price:"font-[500] text-[16px] text-[#d55b45] pl-3 mt-[-4px] line-through",
-  shop_name:"pt-3 text-[15px] text-[#6d4c41] pb-3",
-  active_indicator:"absolute bottom-[-27%] left-0 h-[3px] w-full bg-[#6d4c41]",
-  button: 'w-[150px] bg-[#6d4c41] h-[50px] my-3 flex items-center justify-center rounded-xl cursor-pointer text-white font-bold',
-  cart_button: "px-[20px] h-[38px] rounded-[20px] bg-[#6d4c41] flex items-center justify-center cursor-pointer text-white",
-  cart_button_text:"text-[#fff] text-[16px] font-[600]",
-  input:"w-full border p-2 rounded-[8px] focus:ring focus:ring-opacity-50",
-  activeStatus:"w-[10px] h-[10px] rounded-full absolute top-0 right-1 bg-[#40d132]",
-  noramlFlex:"flex items-center"
-};
-
-export default styles;
+version https://git-lfs.github.com/spec/v1
+oid sha256:15ba3eccd54b86bbeee449abcbf42720a164d55c9588ea5700f21891dab2808d
+size 1089

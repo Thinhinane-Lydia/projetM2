@@ -1,24 +1,3 @@
-// models/SearchHistory.js
-const mongoose = require("mongoose");
-
-const searchHistorySchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true, // Référence à l'utilisateur qui effectue la recherche
-  },
-  searchTerm: {
-    type: String,
-    required: true, // Le terme de recherche
-  },
-  products: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",  // Référence au produit recherché
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now, // Enregistrer la date et l'heure de la recherche
-  },
-});
-
-module.exports = mongoose.model("SearchHistory", searchHistorySchema);
+version https://git-lfs.github.com/spec/v1
+oid sha256:07115a227f19c3f5e1764f7b868321fd87b83718e0e352747f6b3a7ea640f06d
+size 682

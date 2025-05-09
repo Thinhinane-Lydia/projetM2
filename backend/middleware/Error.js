@@ -1,23 +1,3 @@
-const ErrorHandler = require("../utils/ErrorHandler.js");
-
-module.exports = (err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
-  err.message = err.message || "Internal server Error";
-
-  // wrong mongodb id error
-  if (err.name === "CastError") {
-    err = new ErrorHandler(`Resources not found with this id.. Invalid ${err.path}`, 400);
-  }
-
-  // Duplicate key error
-  if (err.code === 11000) {
-    err = new ErrorHandler(`Duplicate key ${Object.keys(err.keyValue)} Entered`, 400);
-  }
-
-  res.status(err.statusCode).json({
-    success: false,
-    message: err.message,
-  });
-
-  
-};
+version https://git-lfs.github.com/spec/v1
+oid sha256:d8ba0a752670dcbc3ffa57f9e5b37bcced02abebaf4b568fe05cfc74a42dea9d
+size 623

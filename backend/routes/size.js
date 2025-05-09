@@ -1,11 +1,3 @@
-const express = require("express");
-const { createSize, getSizes,deleteSize } = require("../controller/sizeController");
-const { getSizesBySubCategory } = require("../controller/sizeController");
-
-const router = express.Router();
-router.post("/", createSize);
-router.get("/", getSizes);
-router.get("/subcategory/:subCategoryId", getSizesBySubCategory);
-router.delete("/:id", deleteSize);
-
-module.exports = router;
+version https://git-lfs.github.com/spec/v1
+oid sha256:d0a828bf4e53e50457574589964c3cc652639d21d5b60259e42ff04003035a3e
+size 425

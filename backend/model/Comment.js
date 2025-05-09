@@ -1,23 +1,3 @@
-
-// const mongoose = require("mongoose");
-
-// const commentSchema = new mongoose.Schema({
-//   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-//   product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-//   text: { type: String, required: true },
-//   rating: { type: Number, default: 0 }, // Ajout du champ rating
-//   createdAt: { type: Date, default: Date.now },
-// });
-
-// module.exports = mongoose.model("Comment", commentSchema);
-const mongoose = require("mongoose");
-
-const commentSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-  text: { type: String, required: true },
-  rating: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now },
-});
-
-module.exports = mongoose.model("Comment", commentSchema);
+version https://git-lfs.github.com/spec/v1
+oid sha256:20a504ed6d7f62268dd13a0839c67896a4b1df6072cb8669d625fb93f3cb91e9
+size 956

@@ -1,13 +1,3 @@
-const mongoose = require("mongoose");
-
-const notificationSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Destinataire de la notification
-  type: { type: String, enum: ["new_product", "comment"], required: true },
-  message: { type: String, required: true },
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
-  commentId: { type: mongoose.Schema.Types.ObjectId, ref: "Comment", default: null },
-  isRead: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
-});
-
-module.exports = mongoose.model("Notification", notificationSchema);
+version https://git-lfs.github.com/spec/v1
+oid sha256:f6853364163ab76c2adb72027e5e9ba00405a6b761c3445b0bdd17cbccf598b6
+size 677

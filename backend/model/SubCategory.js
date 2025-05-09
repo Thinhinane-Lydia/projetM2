@@ -1,10 +1,3 @@
-const mongoose = require("mongoose");
-
-const subCategorySchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
-  sizes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Size" ,required: false}], // Tailles associées
-  image: { type: String, required: true } // 🔥 Ajout de l'image
-});
-
-module.exports = mongoose.model("SubCategory", subCategorySchema);
+version https://git-lfs.github.com/spec/v1
+oid sha256:5337567cfd1846f2b0cd751ba5b42987d382c571801928fc52feca6496190c85
+size 469

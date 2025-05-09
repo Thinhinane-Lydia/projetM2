@@ -1,21 +1,3 @@
-const mongoose = require('mongoose');
-
-const orderSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  items: [
-    {
-      product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-    
-      price: { type: Number, required: true },
-      seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
-
-    }
-  ],
-  total: { type: Number, required: true },
-  shippingAddress: { type: String, required: true },
-  status: { type: String, default: 'En traitement' },
- 
-  createdAt: { type: Date, default: Date.now }
-});
-
-module.exports = mongoose.model('Order', orderSchema);
+version https://git-lfs.github.com/spec/v1
+oid sha256:c846f9635297dca10ab4fd36ebe97f1034f64554ef22c478c428ca978e9a292c
+size 678

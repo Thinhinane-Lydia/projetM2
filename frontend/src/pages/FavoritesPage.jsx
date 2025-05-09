@@ -1,23 +1,3 @@
-import React, { useState } from 'react';
-import Favoris from "../components/Favoris/Favoris";
-import Header from "../components/Layout/Header";
-
-const FavoritesPage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  return (
-    <div className="pt-24 pb-12 min-h-screen bg-amber-50/30">
-      <Header 
-        showCategories={false}
-        showAdCarousel={false}
-        setSearchTerm={setSearchTerm} 
-      />
-      
-      <div className="mt-8">
-        <Favoris searchTerm={searchTerm} />
-      </div>
-    </div>
-  );
-};
-
-export default FavoritesPage;
+version https://git-lfs.github.com/spec/v1
+oid sha256:a35002db95089316662ff9c5c11dbf352632183d247d18a75ef55478984e4afa
+size 592

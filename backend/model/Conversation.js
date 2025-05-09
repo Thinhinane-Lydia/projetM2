@@ -1,20 +1,3 @@
-const mongoose = require('mongoose');
-
-const conversationSchema = new mongoose.Schema({
-  participants: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product'
-  },
-  lastMessage: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Message'
-  }
-}, {
-  timestamps: true
-});
-
-module.exports = mongoose.model('Conversation', conversationSchema);
+version https://git-lfs.github.com/spec/v1
+oid sha256:b220f486e7c125927a2efdd5dac7e419dc01523fad402f17314ad61fb2ee283f
+size 450

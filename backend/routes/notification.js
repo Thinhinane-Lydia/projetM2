@@ -1,16 +1,3 @@
-const express = require("express");
-const { getUserNotifications, markNotificationAsRead, deleteNotification } = require("../controller/notificationController");
-const { isAuthenticated } = require("../middleware/auth");
-
-const router = express.Router();
-
-// 🔹 Récupérer toutes les notifications de l'utilisateur
-router.get("/", isAuthenticated, getUserNotifications);
-
-// 🔹 Marquer une notification comme lue
-router.put("/:id/read", isAuthenticated, markNotificationAsRead);
-
-// 🔹 Supprimer une notification
-router.delete("/:id", isAuthenticated, deleteNotification);
-
-module.exports = router;
+version https://git-lfs.github.com/spec/v1
+oid sha256:fee9d2d9245f9a12f247062842716c86b2e7e29911132f0cbe7451b78cf06c0a
+size 622

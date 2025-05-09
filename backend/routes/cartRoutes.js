@@ -1,12 +1,3 @@
-const express = require("express");
-const { getCart, addToCart, removeFromCart, updateCartItem } = require("../controller/cartController");
-const { isAuthenticated } = require("../middleware/auth");
-
-const router = express.Router();
-
-router.get("/", isAuthenticated, getCart);  // ✅ Récupérer le panier
-router.post("/", isAuthenticated, addToCart);  // ✅ Ajouter au panier
-router.delete("/:id", isAuthenticated, removeFromCart);  // ✅ Supprimer un article
-router.put("/:id", isAuthenticated, updateCartItem);  // ✅ Modifier quantité
-
-module.exports = router;
+version https://git-lfs.github.com/spec/v1
+oid sha256:d62f6aedb892722573a0153faabfe5cdd77ae144a246802cef080ff111527ce7
+size 582

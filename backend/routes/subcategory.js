@@ -1,20 +1,3 @@
-const express = require("express");
-const { createSubCategory, getSubCategoriesByCategory,updateSubCategory,deleteSubCategory } = require("../controller/subcategory");
-const upload = require("../multer");
-const router = express.Router();
-
-
-
-
-// ✅ Récupérer les sous-catégories d'une catégorie
-router.get("/:categoryId", getSubCategoriesByCategory);
-
-
-
-// Supprimer une sous-catégorie
-router.delete("/:id", deleteSubCategory);
-
-
-router.post("/", upload.single("image"), createSubCategory);
-router.put("/:id", upload.single("image"), updateSubCategory);
-module.exports = router;
+version https://git-lfs.github.com/spec/v1
+oid sha256:8d0b645274a0f02bd333943d4be656abd45de08373ebf7af16472aefcc3b3282
+size 604

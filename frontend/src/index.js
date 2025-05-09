@@ -1,15 +1,3 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
- 
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-
- 
-reportWebVitals();
+version https://git-lfs.github.com/spec/v1
+oid sha256:aca064a2eb48aeb5f3083ff8b58617378903859e53de46b041d1d846d6fe4c9f
+size 320

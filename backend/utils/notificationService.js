@@ -1,21 +1,3 @@
-const Notification = require("../model/Notification");
-const { sendNotificationSocket } = require("../app");
-
-/**
- * Fonction pour créer et envoyer une notification en temps réel.
- * @param {Object} data - Données de la notification.
- */
-const sendNotification = async (data) => {
-  try {
-    // 🔹 Sauvegarde dans MongoDB
-    const notification = new Notification(data);
-    await notification.save();
-
-    // 🔹 Envoi en temps réel via WebSockets
-    sendNotificationSocket(data.userId, notification);
-  } catch (error) {
-    console.error("Erreur lors de l'envoi de la notification :", error);
-  }
-};
-
-module.exports = { sendNotification };
+version https://git-lfs.github.com/spec/v1
+oid sha256:84889cd126bcba1ed7f75bc509923b5a7fb6b85072e2d26d9fd274bc910430f0
+size 673

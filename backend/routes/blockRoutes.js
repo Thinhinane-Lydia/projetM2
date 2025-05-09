@@ -1,19 +1,3 @@
-const express = require("express");
-const { isAuthenticated } = require("../middleware/auth");
-const { 
-  blockUser, 
-  unblockUser, 
-  getBlockedUsers,
-  isUserBlocked,
-  checkIfUserIsBlockedBy
-} = require("../controller/blockController");
-
-const router = express.Router();
-
-// Routes pour le blocage d'utilisateurs
-router.post("/block/:userId", isAuthenticated, blockUser);
-router.post("/unblock/:userId", isAuthenticated, unblockUser);
-router.get("/blocked", isAuthenticated, getBlockedUsers);
-router.get("/is-blocked/:userId", isAuthenticated, isUserBlocked);
-router.get('/blocked-by/:userId', isAuthenticated,checkIfUserIsBlockedBy);
-module.exports = router;
+version https://git-lfs.github.com/spec/v1
+oid sha256:1d2a6f346d795fb50707e74148bbb41f27a28c770377773976d5c28735c6417d
+size 683

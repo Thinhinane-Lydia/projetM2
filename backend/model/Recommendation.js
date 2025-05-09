@@ -1,9 +1,3 @@
-const mongoose = require("mongoose");
-
-const recommendationSchema = new mongoose.Schema({
-  user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  recommended_products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true }],
-  created_at: { type: Date, default: Date.now },
-});
-
-module.exports = mongoose.model("Recommendation", recommendationSchema);
+version https://git-lfs.github.com/spec/v1
+oid sha256:05b4863300978bfba5cd4521cfc2bc4aee63ca9390698e4957d7a16422132a1c
+size 408
